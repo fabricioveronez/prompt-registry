@@ -1,7 +1,7 @@
 ---
 nome: Diagnosticar Migração de Batch para Tempo Real
 descricao: Analisa a documentação de um sistema em processamento em lote (Forge), mapeia gargalos e acoplamentos e compara caminhos arquiteturais para tempo real, com recomendação e bloco de exportação para o próximo passo.
-versao: 1.1.0
+versao: 1.1.1
 tags: [arquitetura, batch, streaming, tempo-real, migração]
 inputs:
   - nome: dados_do_sistema_e_ambiente
@@ -38,7 +38,7 @@ Forneça o retorno estritamente em Markdown no seguinte formato:
 ## 1. Mapeamento do Estado Atual
 - Resumo do funcionamento do lote atual (volumetria, janelas de execução, dependências).
 - Gargalos e limitações identificadas para tempo real.
-- Volumetria para dimensionamento: informe eventos por segundo, volume por hora e número de partições. Não use termos como "estimado", "aproximadamente" ou "não informado": o time precisa de números firmes para dimensionar a nova arquitetura.
+- Volumetria para dimensionamento: informe eventos por segundo e volume por hora. Separe dado de estimativa: todo número que não aparece literalmente no SNAPSHOT, inclusive os deduzidos dele, leva a marca **[estimativa]** e a premissa usada. Se não houver base nem para estimar, registre a lacuna para ser levantada.
 
 ## 2. Análise de Caminhos Arquiteturais para Tempo Real
 Apresente ao menos 2 caminhos viáveis (ex: CDC/Debezium, Barramento de Eventos Kafka/RabbitMQ, Processamento de Stream Flink/Spark, Webhooks/Serverless).

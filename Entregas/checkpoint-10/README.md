@@ -164,10 +164,36 @@ A action oficial também avalia só o checkout atual; ela não faz a comparaçã
 - [`execucao-local-regressao.txt`](./execucao-local-regressao.txt): duas regressões provocadas no prompt de backpressure.
   - **Estrutural** ([`regressao-backpressure.patch`](./regressao-backpressure.patch)): um "enxugamento" que remove do template a etapa de trade-offs e a matriz comparativa. Reprovou em `formato` e `matriz_completa` nas 3 repetições, exit 100.
   - **Instrução para aceitar descarte de mensagens:** o modelo ignorou a instrução, porque o cenário proíbe perda, e as 3 saídas passaram. O gate mede o comportamento, não o texto do prompt; uma mudança que não piora a saída não é regressão.
+- [`execucao-local-juiz.txt`](./execucao-local-juiz.txt): falha barrada só pelo juiz, e a correção que a resolve (ver seção 5.1).
+
+### 5.1 Falha no julgamento do juiz e correção
+
+A regressão estrutural acima é barrada pelos asserts determinísticos. Para mostrar o juiz barrando sozinho uma piora, a mudança precisava manter o formato e piorar o conteúdo. Ela foi feita no `diagnosticar-migracao-batch-tempo-real`, em duas versões do prompt.
+
+**v1.1.0, a "melhoria" que regride.** Para dar concretude ao dimensionamento, a seção 1 do template passou a pedir eventos por segundo, volume por hora e número de partições, "sem termos como estimado ou não informado". A documentação do Forge não traz nenhum desses números. O modelo obedeceu e inventou valores (1.000 eventos/s, 3,6 milhões de eventos/hora, 1 partição por hora), apresentados como fatos.
+
+| Camada | Resultado em 2 execuções (6 saídas) |
+| --- | --- |
+| Determinística (formato, caminhos, `<passo1_result>`, dependentes, latência, custo) | 6 de 6 em todos os asserts |
+| Juiz, critério D3 ("não inventa números de volumetria") | 0 de 6; nota 0,75, reprovada porque D3 é essencial |
+
+Sem o juiz, essa versão teria sido mesclada: o relatório está no formato pedido e traz tudo o que os asserts procuram. O passo 2 da cadeia receberia números falsos como base do plano de migração.
+
+**v1.1.1, a correção.** Mantém o pedido de volumetria, mas exige separar dado de estimativa. A primeira versão da correção não bastou, e a evidência registra as três tentativas:
+
+| Tentativa | Mudança | Juiz | O que ainda falhava |
+| --- | --- | --- | --- |
+| A | marcar como `[estimativa]` o que não estiver no snapshot | 2 de 3 | "1 partição por hora", deduzido de "particionadas por hora", sem marca |
+| B | marcar também os números deduzidos do snapshot | 3 de 6 | o mesmo, agora "24 partições/dia" |
+| **v1.1.1** | B, sem pedir o número de partições | **6 de 6, nota 1,0** | nada |
+
+O número de partições foi retirado porque não é volumetria e é ambíguo (partição da tabela ou do tópico). Com ele no pedido, o modelo sempre tinha um valor "deduzível" para afirmar. A lição para o playbook: quando o juiz reprova, a correção mira a causa que ele aponta na justificativa (aqui, sempre o mesmo número), e não o texto do prompt em geral.
 
 ### Execução no GitHub Actions
 
 > **PENDENTE, preencher após as execuções:** link da execução verde (PR com este checkpoint), link da execução vermelha (PR com `regressao-backpressure.patch`) e captura do comentário da action em cada PR.
+>
+> **PENDENTE, falha no juiz:** link da execução vermelha do PR `feat/checkpoint-10-juiz` (v1.1.0), com o trecho do log em que `diagnostico_fiel` reprova, e link da execução verde no mesmo PR depois do push da v1.1.1.
 
 Passos para gerar:
 
@@ -175,11 +201,13 @@ Passos para gerar:
 2. Abrir o PR deste branch para a `main`. Como `.github/` mudou, a suíte completa roda: são 9 jobs de avaliação, que devem passar.
 3. Em *Settings → Branches*, exigir o check `Gate de regressão` na `main`.
 4. Criar um branch a partir deste, aplicar `git apply Entregas/checkpoint-10/regressao-backpressure.patch`, fazer commit e abrir PR. Só `devops/decidir-solucao-backpressure` deve rodar, e o gate deve ficar vermelho com o merge bloqueado.
+5. Falha no juiz: enviar `feat/checkpoint-10-juiz` (só a v1.1.0) e abrir PR para a `main`. Só o diagnóstico roda; os asserts determinísticos passam e `diagnostico_fiel` reprova.
+6. Correção: trazer a v1.1.1 para o mesmo branch (`git merge --ff-only feat/checkpoint-10-juiz-correcao`) e enviar. O mesmo PR roda de novo e fica verde.
 
 ## 6. Limitações
 
 - **Uma entrada por prompt na maioria das suítes.** O gate pega regressão nesse caso, não em qualquer entrada. Mais casos aumentam o custo de forma linear.
-- **Rubricas dos prompts novos sem gabarito humano.** Elas foram ajustadas contra a versão atual (todas as saídas deveriam passar), mas não contra saídas ruins conhecidas, como foi feito no CP09. A regressão estrutural foi barrada pelos asserts determinísticos; nenhuma saída ruim real foi barrada só pelo juiz desses prompts.
+- **Rubricas dos prompts novos sem gabarito humano.** Elas foram ajustadas contra a versão atual (todas as saídas deveriam passar), mas não contra saídas ruins conhecidas, como foi feito no CP09. A regressão estrutural foi barrada pelos asserts determinísticos. Até agora, só uma saída ruim foi barrada apenas pelo juiz: a v1.1.0 do diagnóstico (seção 5.1).
 - **Gerador e juiz são do mesmo fornecedor.** Uma degradação comum aos dois modelos passaria. Um juiz de outro fornecedor exige uma segunda chave.
 - **O comentário da action é mínimo.** Ele traz só a contagem de sucessos e falhas, cria um comentário novo a cada execução e não diz qual assert reprovou. O detalhe fica no log do job.
 - **Push sem PR em outros branches não é avaliado** (decisão 6).

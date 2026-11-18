@@ -1,7 +1,7 @@
 ---
 nome: Diagnosticar Migração de Batch para Tempo Real
 descricao: Analisa a documentação de um sistema em processamento em lote (Forge), mapeia gargalos e acoplamentos e compara caminhos arquiteturais para tempo real, com recomendação e bloco de exportação para o próximo passo.
-versao: 1.1.0
+versao: 1.1.1
 tags: [arquitetura, batch, streaming, tempo-real, migração]
 inputs:
   - nome: dados_do_sistema_e_ambiente
@@ -23,7 +23,7 @@ Dado o snapshot de documentação e ambiente do sistema Forge, o prompt assume o
 
 ## Exemplo de uso
 
-Substituir `{{dados_do_sistema_e_ambiente}}` pela documentação e pelos dados do ambiente do sistema Forge. A saída é o relatório com mapeamento do estado atual, análise dos caminhos, recomendação técnica e o bloco de exportação.
+Substituir `{{dados_do_sistema_e_ambiente}}` pela documentação e pelos dados do ambiente do sistema Forge. A saída é o relatório com mapeamento do estado atual (incluindo eventos por segundo e volume por hora, com o que não está na documentação marcado como **[estimativa]** ou lacuna), análise dos caminhos, recomendação técnica e o bloco de exportação.
 
 ## Testes
 
@@ -38,5 +38,6 @@ npx promptfoo@latest eval -c desenvolvimento/diagnosticar-migracao-batch-tempo-r
 
 ## Limitações conhecidas
 
-- A documentação de exemplo não traz volumetria. O prompt não pede que as lacunas sejam declaradas, então o modelo às vezes cita latências típicas de uma tecnologia sem marcá-las como estimativa.
+- A versão 1.1.0 exigia números firmes de volumetria, sem "estimado". Como a documentação de exemplo não traz volumetria, o modelo inventava valores (ex.: 1.000 eventos/s) e o juiz reprovou o build. A versão 1.1.1 pede que todo número ausente da documentação seja marcado como estimativa, com a premissa. Ela também deixou de pedir o número de partições, que o modelo deduzia de "particionadas por hora" sem marcar.
+- Latências típicas de uma tecnologia (ex.: "segundos" com streaming) às vezes aparecem sem a marca de estimativa. O juiz aceita, porque são ordens de grandeza, não dados do sistema.
 - A entrada do teste é fixa. Ela não cobre sistemas diferentes do Forge.
