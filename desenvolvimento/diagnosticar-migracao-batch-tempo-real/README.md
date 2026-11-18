@@ -1,7 +1,7 @@
 ---
 nome: Diagnosticar Migração de Batch para Tempo Real
 descricao: Analisa a documentação de um sistema em processamento em lote (Forge), mapeia gargalos e acoplamentos e compara caminhos arquiteturais para tempo real, com recomendação e bloco de exportação para o próximo passo.
-versao: 1.0.0
+versao: 1.1.0
 tags: [arquitetura, batch, streaming, tempo-real, migração]
 inputs:
   - nome: dados_do_sistema_e_ambiente
