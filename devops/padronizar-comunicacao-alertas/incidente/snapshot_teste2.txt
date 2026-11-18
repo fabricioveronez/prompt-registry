@@ -1,0 +1,27 @@
+
+        $ kubectl get pods -n sentinel-prod
+        NAME                            READY   STATUS             RESTARTS   AGE
+        sentinel-api-7d9c8b6f4-2xk9p    1/1     Running            0          6d
+        sentinel-api-7d9c8b6f4-zzp10    0/1     ImagePullBackOff   0          8m
+        sentinel-ingest-8f7a9c5b-4dkqm  0/1     Pending            0          8m
+        sentinel-scheduler-6c4d7f-nn8vx 1/1     Running            0          6d
+
+        $ kubectl describe pod sentinel-api-7d9c8b6f4-zzp10 -n sentinel-prod
+            State:    Waiting
+              Reason: ImagePullBackOff
+            Image:    registry.aegis.io/sentinel-api:2.9.2
+        Events:
+          Type     Reason   Age   From     Message
+          ----     ------   ----  ----     -------
+          Warning  Failed   7m    kubelet  Failed to pull image "registry.aegis.io/sentinel-api:2.9.2": manifest unknown
+          Warning  Failed   7m    kubelet  Error: ErrImagePull
+          Normal   BackOff  6m    kubelet  Back-off pulling image "registry.aegis.io/sentinel-api:2.9.2"
+
+        $ kubectl describe pod sentinel-ingest-8f7a9c5b-4dkqm -n sentinel-prod
+            State:    Waiting
+              Reason: Pending
+            Requests: cpu: 2
+        Events:
+          Type     Reason            Age   From               Message
+          ----     ------            ----  ----               -------
+          Warning  FailedScheduling  7m    default-scheduler  0/6 nodes are available: 6 Insufficient cpu

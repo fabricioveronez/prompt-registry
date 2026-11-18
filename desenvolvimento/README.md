@@ -20,4 +20,6 @@ Entram aqui prompts relacionados a:
 
 ## Prompts
 
-_Nenhum prompt cadastrado ainda._
+- [diagnosticar-migracao-batch-tempo-real](./diagnosticar-migracao-batch-tempo-real/) — Analisa a documentação de um sistema em processamento em lote (Forge), mapeia gargalos e acoplamentos e compara caminhos arquiteturais para tempo real, com recomendação e bloco de exportação para o próximo passo.
+- [planejar-migracao-incremental-batch-tempo-real](./planejar-migracao-incremental-batch-tempo-real/) — Define a estratégia de rollout e o roadmap passo a passo da migração incremental do Forge, com coexistência entre lote e tempo real, matriz de riscos, plano de rollback e bloco de exportação para o próximo passo.
+- [especificar-execucao-tatica-migracao-tempo-real](./especificar-execucao-tatica-migracao-tempo-real/) — Transforma o plano de migração do Forge em especificação executável, com padrões de resiliência e garantia de entrega, contratos de eventos, DLQ e retry, plano de observabilidade e checklist de validação do cutover.

@@ -1,0 +1,2962 @@
+{
+  "evalId": "eval-xpV-2026-11-06T00:04:58",
+  "results": {
+    "version": 3,
+    "timestamp": "2026-11-06T00:04:58.732Z",
+    "prompts": [
+      {
+        "raw": "({ vars }) => {\n  const prompt = fs\n    .readFileSync(path.join(__dirname, 'prompt.md'), 'utf8')\n    .replace(/^---\\r?\\n[\\s\\S]*?\\r?\\n---\\r?\\n+/, '');\n\n  return prompt.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (original, nome) => vars[nome] ?? original);\n}",
+        "label": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+        "config": {},
+        "id": "29285bd76aa4fa7fe0c1aaa827c73479945dff7b06e2241910d0943bb0ce6660",
+        "provider": "openai:gpt-4o-mini",
+        "metrics": {
+          "score": 9,
+          "testPassCount": 9,
+          "testFailCount": 0,
+          "testErrorCount": 0,
+          "testCacheHitCount": 0,
+          "assertPassCount": 81,
+          "assertFailCount": 0,
+          "totalLatencyMs": 14805,
+          "tokenUsage": {
+            "prompt": 6132,
+            "completion": 792,
+            "cached": 0,
+            "total": 6924,
+            "numRequests": 9,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "namedScores": {},
+          "namedScoresCount": {},
+          "namedScoreWeights": {},
+          "cost": 0.0013950000000000002
+        }
+      }
+    ],
+    "results": [
+      {
+        "cost": 0.0001683,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ALERTA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "IMPACTO:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HIPÓTESE INICIAL:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "AÇÃO IMEDIATA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ESCALAR PARA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "regex",
+                "value": "ESCALAR PARA:.*@\\w+"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.trim().split(/\\r?\\n/).length <= 8"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "fb02d6a9-c310-469a-8d36-add38adb9789",
+        "latencyMs": 1878,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Você é um Engenheiro de Confiabilidade de Sistemas (SRE) e Especialista em Resposta a Incidentes. Sua tarefa é analisar o snapshot de alertas brutas enviado pelo sistema de monitoramento e padronizar a comunicação do incidente.\n\n## Objetivo\nProcessar o snapshot de alertas fornecido e gerar um resultado estritamente padronizado conforme o modelo dos exemplos.\n\n## Regras e Restrições\n1. **Estrutura Rígida**: Cada alerta processado deve conter exatamente os 5 campos na mesma ordem: ALERTA:, IMPACTO:, HIPÓTESE INICIAL:, AÇÃO IMEDIATA: e ESCALAR PARA:.\n2. **Linguagem Direta**: Mantenha as frases objetivas, técnicas e concisas.\n3. **Fidelidade aos Dados**: Extraia apenas as informações contidas no snapshot fornecido. Não invente métricas ou horários não citados. Cite cada valor exatamente como aparece, sem arredondar nem deduzir, e nunca apresente um limite como valor medido. Exemplo: para `disco 91%/95%`, escreva `disco em 91%/95%`, e não `disco atingiu 95%`.\n4. **Sem Texto Adicional**: Retorne APENAS o bloco de alertas padronizados. Não inclua saudações, preâmbulos nem explicações antes ou depois do resultado.\n\n## Exemplos de Padrão (Few-Shot)\n\nEx 1\nALERTA: Relay - taxa de rejeição de ingestão acima de 2% por 5min\nIMPACTO: ingestão de telemetry degradada para ~12% dos tenants\nHIPÓTESE INICIAL: deploy do Relay às 09:14 reduziu o buffer de ingestão\nAÇÃO IMEDIATA: rollback iniciado via Argo CD\nESCALAR PARA: @relay-core se a rejeição não cair em 10min\n\nEx 2\nALERTA: Forge - lag de ingestão acima de 15min\nIMPACTO: dashboards do Sentinel atrasados para todos os tenants\nHIPÓTESE INICIAL: pico de volume do tenant acme-corp saturou o consumer\nAÇÃO IMEDIATA: aumento manual de partições do consumer do Relay\nESCALAR PARA: @data-platform se lag não estabilizar em 20min\n\nEx 3\nALERTA: Cerebro - latência de busca p99 acima de 4s\nIMPACTO: investigação de incidentes lenta para o time interno\nHIPÓTESE INICIAL: reindexação noturna não concluiu antes do horário comercial\nAÇÃO IMEDIATA: pausar reindexação e priorizar shard quente\nESCALAR PARA: @search-infra se p99 não cair em 15min\n\n## Entrada do Usuário\nAnalise o snapshot de alertas contido abaixo e converta-o para o padrão exato dos exemplos:\n\n<snapshot_alertas>\n2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,\nqueue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries\nsending 4x baseline volume after onboarding new region\n\n</snapshot_alertas>\n",
+          "label": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "29285bd76aa4fa7fe0c1aaa827c73479945dff7b06e2241910d0943bb0ce6660",
+        "promptIdx": 0,
+        "repeatGroupId": "test-0-vars-0",
+        "repeatIndex": 0,
+        "provider": {
+          "id": "openai:gpt-4o-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "ALERTA: Sentinel - autoscaler atingiu o máximo de réplicas (60/60) no sentinel-api  \nIMPACTO: profundidade da fila no Relay crescendo 2k/min, CPU média em 88%  \nHIPÓTESE INICIAL: tenant stark-industries enviando 4x o volume base após onboarding de nova região  \nAÇÃO IMEDIATA: aumentar manualmente as réplicas do sentinel-api  \nESCALAR PARA: @sentinel-team se a fila não estabilizar em 10min  ",
+          "tokenUsage": {
+            "prompt": 694,
+            "completion": 107,
+            "cached": 0,
+            "total": 801,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 1878,
+          "finishReason": "stop",
+          "cost": 0.0001683,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:00 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "1281",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Alerta 1 do CP02 (Sentinel no limite de réplicas)",
+          "vars": {
+            "snapshot_alertas": "2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,\nqueue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries\nsending 4x baseline volume after onboarding new region\n"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "ALERTA:"
+            },
+            {
+              "type": "contains",
+              "value": "IMPACTO:"
+            },
+            {
+              "type": "contains",
+              "value": "HIPÓTESE INICIAL:"
+            },
+            {
+              "type": "contains",
+              "value": "AÇÃO IMEDIATA:"
+            },
+            {
+              "type": "contains",
+              "value": "ESCALAR PARA:"
+            },
+            {
+              "type": "regex",
+              "value": "ESCALAR PARA:.*@\\w+"
+            },
+            {
+              "type": "javascript",
+              "value": "output.trim().split(/\\r?\\n/).length <= 8"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 0,
+        "tokenUsage": {
+          "prompt": 694,
+          "completion": 107,
+          "cached": 0,
+          "total": 801,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_alertas": "2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,\nqueue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries\nsending 4x baseline volume after onboarding new region\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:00 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "1281",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0001677,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ALERTA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "IMPACTO:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HIPÓTESE INICIAL:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "AÇÃO IMEDIATA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ESCALAR PARA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "regex",
+                "value": "ESCALAR PARA:.*@\\w+"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.trim().split(/\\r?\\n/).length <= 8"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "031526d3-9022-4e4e-a1e5-1f9c2c3df3e9",
+        "latencyMs": 1774,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Você é um Engenheiro de Confiabilidade de Sistemas (SRE) e Especialista em Resposta a Incidentes. Sua tarefa é analisar o snapshot de alertas brutas enviado pelo sistema de monitoramento e padronizar a comunicação do incidente.\n\n## Objetivo\nProcessar o snapshot de alertas fornecido e gerar um resultado estritamente padronizado conforme o modelo dos exemplos.\n\n## Regras e Restrições\n1. **Estrutura Rígida**: Cada alerta processado deve conter exatamente os 5 campos na mesma ordem: ALERTA:, IMPACTO:, HIPÓTESE INICIAL:, AÇÃO IMEDIATA: e ESCALAR PARA:.\n2. **Linguagem Direta**: Mantenha as frases objetivas, técnicas e concisas.\n3. **Fidelidade aos Dados**: Extraia apenas as informações contidas no snapshot fornecido. Não invente métricas ou horários não citados. Cite cada valor exatamente como aparece, sem arredondar nem deduzir, e nunca apresente um limite como valor medido. Exemplo: para `disco 91%/95%`, escreva `disco em 91%/95%`, e não `disco atingiu 95%`.\n4. **Sem Texto Adicional**: Retorne APENAS o bloco de alertas padronizados. Não inclua saudações, preâmbulos nem explicações antes ou depois do resultado.\n\n## Exemplos de Padrão (Few-Shot)\n\nEx 1\nALERTA: Relay - taxa de rejeição de ingestão acima de 2% por 5min\nIMPACTO: ingestão de telemetry degradada para ~12% dos tenants\nHIPÓTESE INICIAL: deploy do Relay às 09:14 reduziu o buffer de ingestão\nAÇÃO IMEDIATA: rollback iniciado via Argo CD\nESCALAR PARA: @relay-core se a rejeição não cair em 10min\n\nEx 2\nALERTA: Forge - lag de ingestão acima de 15min\nIMPACTO: dashboards do Sentinel atrasados para todos os tenants\nHIPÓTESE INICIAL: pico de volume do tenant acme-corp saturou o consumer\nAÇÃO IMEDIATA: aumento manual de partições do consumer do Relay\nESCALAR PARA: @data-platform se lag não estabilizar em 20min\n\nEx 3\nALERTA: Cerebro - latência de busca p99 acima de 4s\nIMPACTO: investigação de incidentes lenta para o time interno\nHIPÓTESE INICIAL: reindexação noturna não concluiu antes do horário comercial\nAÇÃO IMEDIATA: pausar reindexação e priorizar shard quente\nESCALAR PARA: @search-infra se p99 não cair em 15min\n\n## Entrada do Usuário\nAnalise o snapshot de alertas contido abaixo e converta-o para o padrão exato dos exemplos:\n\n<snapshot_alertas>\n2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,\nqueue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries\nsending 4x baseline volume after onboarding new region\n\n</snapshot_alertas>\n",
+          "label": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "29285bd76aa4fa7fe0c1aaa827c73479945dff7b06e2241910d0943bb0ce6660",
+        "promptIdx": 0,
+        "repeatGroupId": "test-0-vars-0",
+        "repeatIndex": 1,
+        "provider": {
+          "id": "openai:gpt-4o-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "ALERTA: Sentinel - autoscaler atingiu o máximo de réplicas (60/60) no sentinel-api  \nIMPACTO: profundidade da fila no Relay crescendo 2k/min, CPU média em 88%  \nHIPÓTESE INICIAL: tenant stark-industries enviando 4x volume base após onboarding de nova região  \nAÇÃO IMEDIATA: aumentar manualmente as réplicas do sentinel-api  \nESCALAR PARA: @sentinel-team se a fila não estabilizar em 10min  ",
+          "tokenUsage": {
+            "prompt": 694,
+            "completion": 106,
+            "cached": 0,
+            "total": 800,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 1774,
+          "finishReason": "stop",
+          "cost": 0.0001677,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:00 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "1264",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Alerta 1 do CP02 (Sentinel no limite de réplicas)",
+          "vars": {
+            "snapshot_alertas": "2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,\nqueue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries\nsending 4x baseline volume after onboarding new region\n"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "ALERTA:"
+            },
+            {
+              "type": "contains",
+              "value": "IMPACTO:"
+            },
+            {
+              "type": "contains",
+              "value": "HIPÓTESE INICIAL:"
+            },
+            {
+              "type": "contains",
+              "value": "AÇÃO IMEDIATA:"
+            },
+            {
+              "type": "contains",
+              "value": "ESCALAR PARA:"
+            },
+            {
+              "type": "regex",
+              "value": "ESCALAR PARA:.*@\\w+"
+            },
+            {
+              "type": "javascript",
+              "value": "output.trim().split(/\\r?\\n/).length <= 8"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 1,
+        "tokenUsage": {
+          "prompt": 694,
+          "completion": 106,
+          "cached": 0,
+          "total": 800,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_alertas": "2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,\nqueue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries\nsending 4x baseline volume after onboarding new region\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:00 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "1264",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0001683,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ALERTA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "IMPACTO:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HIPÓTESE INICIAL:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "AÇÃO IMEDIATA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ESCALAR PARA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "regex",
+                "value": "ESCALAR PARA:.*@\\w+"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.trim().split(/\\r?\\n/).length <= 8"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "0b31f4b7-0899-4df1-bc68-a87a26573aea",
+        "latencyMs": 1830,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Você é um Engenheiro de Confiabilidade de Sistemas (SRE) e Especialista em Resposta a Incidentes. Sua tarefa é analisar o snapshot de alertas brutas enviado pelo sistema de monitoramento e padronizar a comunicação do incidente.\n\n## Objetivo\nProcessar o snapshot de alertas fornecido e gerar um resultado estritamente padronizado conforme o modelo dos exemplos.\n\n## Regras e Restrições\n1. **Estrutura Rígida**: Cada alerta processado deve conter exatamente os 5 campos na mesma ordem: ALERTA:, IMPACTO:, HIPÓTESE INICIAL:, AÇÃO IMEDIATA: e ESCALAR PARA:.\n2. **Linguagem Direta**: Mantenha as frases objetivas, técnicas e concisas.\n3. **Fidelidade aos Dados**: Extraia apenas as informações contidas no snapshot fornecido. Não invente métricas ou horários não citados. Cite cada valor exatamente como aparece, sem arredondar nem deduzir, e nunca apresente um limite como valor medido. Exemplo: para `disco 91%/95%`, escreva `disco em 91%/95%`, e não `disco atingiu 95%`.\n4. **Sem Texto Adicional**: Retorne APENAS o bloco de alertas padronizados. Não inclua saudações, preâmbulos nem explicações antes ou depois do resultado.\n\n## Exemplos de Padrão (Few-Shot)\n\nEx 1\nALERTA: Relay - taxa de rejeição de ingestão acima de 2% por 5min\nIMPACTO: ingestão de telemetry degradada para ~12% dos tenants\nHIPÓTESE INICIAL: deploy do Relay às 09:14 reduziu o buffer de ingestão\nAÇÃO IMEDIATA: rollback iniciado via Argo CD\nESCALAR PARA: @relay-core se a rejeição não cair em 10min\n\nEx 2\nALERTA: Forge - lag de ingestão acima de 15min\nIMPACTO: dashboards do Sentinel atrasados para todos os tenants\nHIPÓTESE INICIAL: pico de volume do tenant acme-corp saturou o consumer\nAÇÃO IMEDIATA: aumento manual de partições do consumer do Relay\nESCALAR PARA: @data-platform se lag não estabilizar em 20min\n\nEx 3\nALERTA: Cerebro - latência de busca p99 acima de 4s\nIMPACTO: investigação de incidentes lenta para o time interno\nHIPÓTESE INICIAL: reindexação noturna não concluiu antes do horário comercial\nAÇÃO IMEDIATA: pausar reindexação e priorizar shard quente\nESCALAR PARA: @search-infra se p99 não cair em 15min\n\n## Entrada do Usuário\nAnalise o snapshot de alertas contido abaixo e converta-o para o padrão exato dos exemplos:\n\n<snapshot_alertas>\n2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,\nqueue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries\nsending 4x baseline volume after onboarding new region\n\n</snapshot_alertas>\n",
+          "label": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "29285bd76aa4fa7fe0c1aaa827c73479945dff7b06e2241910d0943bb0ce6660",
+        "promptIdx": 0,
+        "repeatGroupId": "test-0-vars-0",
+        "repeatIndex": 2,
+        "provider": {
+          "id": "openai:gpt-4o-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "ALERTA: Sentinel - autoscaler atingiu o máximo de réplicas (60/60) no sentinel-api  \nIMPACTO: profundidade da fila no Relay crescendo 2k/min, CPU média em 88%  \nHIPÓTESE INICIAL: tenant stark-industries enviando 4x o volume base após onboarding de nova região  \nAÇÃO IMEDIATA: aumentar manualmente as réplicas do sentinel-api  \nESCALAR PARA: @sentinel-team se a fila não estabilizar em 10min  ",
+          "tokenUsage": {
+            "prompt": 694,
+            "completion": 107,
+            "cached": 0,
+            "total": 801,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 1830,
+          "finishReason": "stop",
+          "cost": 0.0001683,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:00 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "1333",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Alerta 1 do CP02 (Sentinel no limite de réplicas)",
+          "vars": {
+            "snapshot_alertas": "2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,\nqueue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries\nsending 4x baseline volume after onboarding new region\n"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "ALERTA:"
+            },
+            {
+              "type": "contains",
+              "value": "IMPACTO:"
+            },
+            {
+              "type": "contains",
+              "value": "HIPÓTESE INICIAL:"
+            },
+            {
+              "type": "contains",
+              "value": "AÇÃO IMEDIATA:"
+            },
+            {
+              "type": "contains",
+              "value": "ESCALAR PARA:"
+            },
+            {
+              "type": "regex",
+              "value": "ESCALAR PARA:.*@\\w+"
+            },
+            {
+              "type": "javascript",
+              "value": "output.trim().split(/\\r?\\n/).length <= 8"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 2,
+        "tokenUsage": {
+          "prompt": 694,
+          "completion": 107,
+          "cached": 0,
+          "total": 801,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_alertas": "2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,\nqueue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries\nsending 4x baseline volume after onboarding new region\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:00 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "1333",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0001527,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ALERTA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "IMPACTO:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HIPÓTESE INICIAL:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "AÇÃO IMEDIATA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ESCALAR PARA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "regex",
+                "value": "ESCALAR PARA:.*@\\w+"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.trim().split(/\\r?\\n/).length <= 8"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "72a1e6ac-bc57-459a-84c2-652a467aaf5e",
+        "latencyMs": 1642,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Você é um Engenheiro de Confiabilidade de Sistemas (SRE) e Especialista em Resposta a Incidentes. Sua tarefa é analisar o snapshot de alertas brutas enviado pelo sistema de monitoramento e padronizar a comunicação do incidente.\n\n## Objetivo\nProcessar o snapshot de alertas fornecido e gerar um resultado estritamente padronizado conforme o modelo dos exemplos.\n\n## Regras e Restrições\n1. **Estrutura Rígida**: Cada alerta processado deve conter exatamente os 5 campos na mesma ordem: ALERTA:, IMPACTO:, HIPÓTESE INICIAL:, AÇÃO IMEDIATA: e ESCALAR PARA:.\n2. **Linguagem Direta**: Mantenha as frases objetivas, técnicas e concisas.\n3. **Fidelidade aos Dados**: Extraia apenas as informações contidas no snapshot fornecido. Não invente métricas ou horários não citados. Cite cada valor exatamente como aparece, sem arredondar nem deduzir, e nunca apresente um limite como valor medido. Exemplo: para `disco 91%/95%`, escreva `disco em 91%/95%`, e não `disco atingiu 95%`.\n4. **Sem Texto Adicional**: Retorne APENAS o bloco de alertas padronizados. Não inclua saudações, preâmbulos nem explicações antes ou depois do resultado.\n\n## Exemplos de Padrão (Few-Shot)\n\nEx 1\nALERTA: Relay - taxa de rejeição de ingestão acima de 2% por 5min\nIMPACTO: ingestão de telemetry degradada para ~12% dos tenants\nHIPÓTESE INICIAL: deploy do Relay às 09:14 reduziu o buffer de ingestão\nAÇÃO IMEDIATA: rollback iniciado via Argo CD\nESCALAR PARA: @relay-core se a rejeição não cair em 10min\n\nEx 2\nALERTA: Forge - lag de ingestão acima de 15min\nIMPACTO: dashboards do Sentinel atrasados para todos os tenants\nHIPÓTESE INICIAL: pico de volume do tenant acme-corp saturou o consumer\nAÇÃO IMEDIATA: aumento manual de partições do consumer do Relay\nESCALAR PARA: @data-platform se lag não estabilizar em 20min\n\nEx 3\nALERTA: Cerebro - latência de busca p99 acima de 4s\nIMPACTO: investigação de incidentes lenta para o time interno\nHIPÓTESE INICIAL: reindexação noturna não concluiu antes do horário comercial\nAÇÃO IMEDIATA: pausar reindexação e priorizar shard quente\nESCALAR PARA: @search-infra se p99 não cair em 15min\n\n## Entrada do Usuário\nAnalise o snapshot de alertas contido abaixo e converta-o para o padrão exato dos exemplos:\n\n<snapshot_alertas>\n2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,\nbuffer saturated after deploy 02:55\n\n</snapshot_alertas>\n",
+          "label": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "29285bd76aa4fa7fe0c1aaa827c73479945dff7b06e2241910d0943bb0ce6660",
+        "promptIdx": 0,
+        "repeatGroupId": "test-1-vars-0",
+        "repeatIndex": 0,
+        "provider": {
+          "id": "openai:gpt-4o-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "ALERTA: Relay - taxa de rejeição de ingestão em 6% por 8min\nIMPACTO: ingestão de telemetry degradada para o tenant wakanda-systems\nHIPÓTESE INICIAL: buffer saturado após deploy às 02:55\nAÇÃO IMEDIATA: rollback iniciado via Argo CD\nESCALAR PARA: @relay-core se a rejeição não cair em 10min",
+          "tokenUsage": {
+            "prompt": 674,
+            "completion": 86,
+            "cached": 0,
+            "total": 760,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 1642,
+          "finishReason": "stop",
+          "cost": 0.0001527,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:00 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "1048",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Alerta 2 do CP02 (rejeição de ingestão no Relay)",
+          "vars": {
+            "snapshot_alertas": "2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,\nbuffer saturated after deploy 02:55\n"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "ALERTA:"
+            },
+            {
+              "type": "contains",
+              "value": "IMPACTO:"
+            },
+            {
+              "type": "contains",
+              "value": "HIPÓTESE INICIAL:"
+            },
+            {
+              "type": "contains",
+              "value": "AÇÃO IMEDIATA:"
+            },
+            {
+              "type": "contains",
+              "value": "ESCALAR PARA:"
+            },
+            {
+              "type": "regex",
+              "value": "ESCALAR PARA:.*@\\w+"
+            },
+            {
+              "type": "javascript",
+              "value": "output.trim().split(/\\r?\\n/).length <= 8"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 3,
+        "tokenUsage": {
+          "prompt": 674,
+          "completion": 86,
+          "cached": 0,
+          "total": 760,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_alertas": "2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,\nbuffer saturated after deploy 02:55\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:00 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "1048",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.00015209999999999998,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ALERTA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "IMPACTO:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HIPÓTESE INICIAL:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "AÇÃO IMEDIATA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ESCALAR PARA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "regex",
+                "value": "ESCALAR PARA:.*@\\w+"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.trim().split(/\\r?\\n/).length <= 8"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "88e472e6-020f-4bf2-8e0d-9f134b5d472e",
+        "latencyMs": 1610,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Você é um Engenheiro de Confiabilidade de Sistemas (SRE) e Especialista em Resposta a Incidentes. Sua tarefa é analisar o snapshot de alertas brutas enviado pelo sistema de monitoramento e padronizar a comunicação do incidente.\n\n## Objetivo\nProcessar o snapshot de alertas fornecido e gerar um resultado estritamente padronizado conforme o modelo dos exemplos.\n\n## Regras e Restrições\n1. **Estrutura Rígida**: Cada alerta processado deve conter exatamente os 5 campos na mesma ordem: ALERTA:, IMPACTO:, HIPÓTESE INICIAL:, AÇÃO IMEDIATA: e ESCALAR PARA:.\n2. **Linguagem Direta**: Mantenha as frases objetivas, técnicas e concisas.\n3. **Fidelidade aos Dados**: Extraia apenas as informações contidas no snapshot fornecido. Não invente métricas ou horários não citados. Cite cada valor exatamente como aparece, sem arredondar nem deduzir, e nunca apresente um limite como valor medido. Exemplo: para `disco 91%/95%`, escreva `disco em 91%/95%`, e não `disco atingiu 95%`.\n4. **Sem Texto Adicional**: Retorne APENAS o bloco de alertas padronizados. Não inclua saudações, preâmbulos nem explicações antes ou depois do resultado.\n\n## Exemplos de Padrão (Few-Shot)\n\nEx 1\nALERTA: Relay - taxa de rejeição de ingestão acima de 2% por 5min\nIMPACTO: ingestão de telemetry degradada para ~12% dos tenants\nHIPÓTESE INICIAL: deploy do Relay às 09:14 reduziu o buffer de ingestão\nAÇÃO IMEDIATA: rollback iniciado via Argo CD\nESCALAR PARA: @relay-core se a rejeição não cair em 10min\n\nEx 2\nALERTA: Forge - lag de ingestão acima de 15min\nIMPACTO: dashboards do Sentinel atrasados para todos os tenants\nHIPÓTESE INICIAL: pico de volume do tenant acme-corp saturou o consumer\nAÇÃO IMEDIATA: aumento manual de partições do consumer do Relay\nESCALAR PARA: @data-platform se lag não estabilizar em 20min\n\nEx 3\nALERTA: Cerebro - latência de busca p99 acima de 4s\nIMPACTO: investigação de incidentes lenta para o time interno\nHIPÓTESE INICIAL: reindexação noturna não concluiu antes do horário comercial\nAÇÃO IMEDIATA: pausar reindexação e priorizar shard quente\nESCALAR PARA: @search-infra se p99 não cair em 15min\n\n## Entrada do Usuário\nAnalise o snapshot de alertas contido abaixo e converta-o para o padrão exato dos exemplos:\n\n<snapshot_alertas>\n2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,\nbuffer saturated after deploy 02:55\n\n</snapshot_alertas>\n",
+          "label": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "29285bd76aa4fa7fe0c1aaa827c73479945dff7b06e2241910d0943bb0ce6660",
+        "promptIdx": 0,
+        "repeatGroupId": "test-1-vars-0",
+        "repeatIndex": 1,
+        "provider": {
+          "id": "openai:gpt-4o-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "ALERTA: Relay - taxa de rejeição de ingestão em 6% por 8min\nIMPACTO: ingestão de telemetry degradada para tenant wakanda-systems\nHIPÓTESE INICIAL: buffer saturado após deploy às 02:55\nAÇÃO IMEDIATA: rollback iniciado via Argo CD\nESCALAR PARA: @relay-core se a rejeição não cair em 10min",
+          "tokenUsage": {
+            "prompt": 674,
+            "completion": 85,
+            "cached": 0,
+            "total": 759,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 1610,
+          "finishReason": "stop",
+          "cost": 0.00015209999999999998,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:02 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "1384",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Alerta 2 do CP02 (rejeição de ingestão no Relay)",
+          "vars": {
+            "snapshot_alertas": "2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,\nbuffer saturated after deploy 02:55\n"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "ALERTA:"
+            },
+            {
+              "type": "contains",
+              "value": "IMPACTO:"
+            },
+            {
+              "type": "contains",
+              "value": "HIPÓTESE INICIAL:"
+            },
+            {
+              "type": "contains",
+              "value": "AÇÃO IMEDIATA:"
+            },
+            {
+              "type": "contains",
+              "value": "ESCALAR PARA:"
+            },
+            {
+              "type": "regex",
+              "value": "ESCALAR PARA:.*@\\w+"
+            },
+            {
+              "type": "javascript",
+              "value": "output.trim().split(/\\r?\\n/).length <= 8"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 4,
+        "tokenUsage": {
+          "prompt": 674,
+          "completion": 85,
+          "cached": 0,
+          "total": 759,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_alertas": "2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,\nbuffer saturated after deploy 02:55\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:02 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "1384",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0001503,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ALERTA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "IMPACTO:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HIPÓTESE INICIAL:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "AÇÃO IMEDIATA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ESCALAR PARA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "regex",
+                "value": "ESCALAR PARA:.*@\\w+"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.trim().split(/\\r?\\n/).length <= 8"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "9febf7a2-f3af-41c5-900a-0b13bf9e3d4a",
+        "latencyMs": 1437,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Você é um Engenheiro de Confiabilidade de Sistemas (SRE) e Especialista em Resposta a Incidentes. Sua tarefa é analisar o snapshot de alertas brutas enviado pelo sistema de monitoramento e padronizar a comunicação do incidente.\n\n## Objetivo\nProcessar o snapshot de alertas fornecido e gerar um resultado estritamente padronizado conforme o modelo dos exemplos.\n\n## Regras e Restrições\n1. **Estrutura Rígida**: Cada alerta processado deve conter exatamente os 5 campos na mesma ordem: ALERTA:, IMPACTO:, HIPÓTESE INICIAL:, AÇÃO IMEDIATA: e ESCALAR PARA:.\n2. **Linguagem Direta**: Mantenha as frases objetivas, técnicas e concisas.\n3. **Fidelidade aos Dados**: Extraia apenas as informações contidas no snapshot fornecido. Não invente métricas ou horários não citados. Cite cada valor exatamente como aparece, sem arredondar nem deduzir, e nunca apresente um limite como valor medido. Exemplo: para `disco 91%/95%`, escreva `disco em 91%/95%`, e não `disco atingiu 95%`.\n4. **Sem Texto Adicional**: Retorne APENAS o bloco de alertas padronizados. Não inclua saudações, preâmbulos nem explicações antes ou depois do resultado.\n\n## Exemplos de Padrão (Few-Shot)\n\nEx 1\nALERTA: Relay - taxa de rejeição de ingestão acima de 2% por 5min\nIMPACTO: ingestão de telemetry degradada para ~12% dos tenants\nHIPÓTESE INICIAL: deploy do Relay às 09:14 reduziu o buffer de ingestão\nAÇÃO IMEDIATA: rollback iniciado via Argo CD\nESCALAR PARA: @relay-core se a rejeição não cair em 10min\n\nEx 2\nALERTA: Forge - lag de ingestão acima de 15min\nIMPACTO: dashboards do Sentinel atrasados para todos os tenants\nHIPÓTESE INICIAL: pico de volume do tenant acme-corp saturou o consumer\nAÇÃO IMEDIATA: aumento manual de partições do consumer do Relay\nESCALAR PARA: @data-platform se lag não estabilizar em 20min\n\nEx 3\nALERTA: Cerebro - latência de busca p99 acima de 4s\nIMPACTO: investigação de incidentes lenta para o time interno\nHIPÓTESE INICIAL: reindexação noturna não concluiu antes do horário comercial\nAÇÃO IMEDIATA: pausar reindexação e priorizar shard quente\nESCALAR PARA: @search-infra se p99 não cair em 15min\n\n## Entrada do Usuário\nAnalise o snapshot de alertas contido abaixo e converta-o para o padrão exato dos exemplos:\n\n<snapshot_alertas>\n2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,\nbuffer saturated after deploy 02:55\n\n</snapshot_alertas>\n",
+          "label": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "29285bd76aa4fa7fe0c1aaa827c73479945dff7b06e2241910d0943bb0ce6660",
+        "promptIdx": 0,
+        "repeatGroupId": "test-1-vars-0",
+        "repeatIndex": 2,
+        "provider": {
+          "id": "openai:gpt-4o-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "ALERTA: Relay - taxa de rejeição de ingestão em 6% por 8min\nIMPACTO: ingestão de telemetry degradada para o tenant wakanda-systems\nHIPÓTESE INICIAL: buffer saturado após deploy às 02:55\nAÇÃO IMEDIATA: rollback iniciado\nESCALAR PARA: @relay-core se a rejeição não cair em 10min",
+          "tokenUsage": {
+            "prompt": 674,
+            "completion": 82,
+            "cached": 0,
+            "total": 756,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 1437,
+          "finishReason": "stop",
+          "cost": 0.0001503,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:01 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "1208",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Alerta 2 do CP02 (rejeição de ingestão no Relay)",
+          "vars": {
+            "snapshot_alertas": "2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,\nbuffer saturated after deploy 02:55\n"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "ALERTA:"
+            },
+            {
+              "type": "contains",
+              "value": "IMPACTO:"
+            },
+            {
+              "type": "contains",
+              "value": "HIPÓTESE INICIAL:"
+            },
+            {
+              "type": "contains",
+              "value": "AÇÃO IMEDIATA:"
+            },
+            {
+              "type": "contains",
+              "value": "ESCALAR PARA:"
+            },
+            {
+              "type": "regex",
+              "value": "ESCALAR PARA:.*@\\w+"
+            },
+            {
+              "type": "javascript",
+              "value": "output.trim().split(/\\r?\\n/).length <= 8"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 5,
+        "tokenUsage": {
+          "prompt": 674,
+          "completion": 82,
+          "cached": 0,
+          "total": 756,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_alertas": "2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,\nbuffer saturated after deploy 02:55\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:01 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "1208",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0001452,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ALERTA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "IMPACTO:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HIPÓTESE INICIAL:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "AÇÃO IMEDIATA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ESCALAR PARA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "regex",
+                "value": "ESCALAR PARA:.*@\\w+"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.trim().split(/\\r?\\n/).length <= 8"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "5e173aef-a628-4f2b-88f9-3a6b14734d47",
+        "latencyMs": 1724,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Você é um Engenheiro de Confiabilidade de Sistemas (SRE) e Especialista em Resposta a Incidentes. Sua tarefa é analisar o snapshot de alertas brutas enviado pelo sistema de monitoramento e padronizar a comunicação do incidente.\n\n## Objetivo\nProcessar o snapshot de alertas fornecido e gerar um resultado estritamente padronizado conforme o modelo dos exemplos.\n\n## Regras e Restrições\n1. **Estrutura Rígida**: Cada alerta processado deve conter exatamente os 5 campos na mesma ordem: ALERTA:, IMPACTO:, HIPÓTESE INICIAL:, AÇÃO IMEDIATA: e ESCALAR PARA:.\n2. **Linguagem Direta**: Mantenha as frases objetivas, técnicas e concisas.\n3. **Fidelidade aos Dados**: Extraia apenas as informações contidas no snapshot fornecido. Não invente métricas ou horários não citados. Cite cada valor exatamente como aparece, sem arredondar nem deduzir, e nunca apresente um limite como valor medido. Exemplo: para `disco 91%/95%`, escreva `disco em 91%/95%`, e não `disco atingiu 95%`.\n4. **Sem Texto Adicional**: Retorne APENAS o bloco de alertas padronizados. Não inclua saudações, preâmbulos nem explicações antes ou depois do resultado.\n\n## Exemplos de Padrão (Few-Shot)\n\nEx 1\nALERTA: Relay - taxa de rejeição de ingestão acima de 2% por 5min\nIMPACTO: ingestão de telemetry degradada para ~12% dos tenants\nHIPÓTESE INICIAL: deploy do Relay às 09:14 reduziu o buffer de ingestão\nAÇÃO IMEDIATA: rollback iniciado via Argo CD\nESCALAR PARA: @relay-core se a rejeição não cair em 10min\n\nEx 2\nALERTA: Forge - lag de ingestão acima de 15min\nIMPACTO: dashboards do Sentinel atrasados para todos os tenants\nHIPÓTESE INICIAL: pico de volume do tenant acme-corp saturou o consumer\nAÇÃO IMEDIATA: aumento manual de partições do consumer do Relay\nESCALAR PARA: @data-platform se lag não estabilizar em 20min\n\nEx 3\nALERTA: Cerebro - latência de busca p99 acima de 4s\nIMPACTO: investigação de incidentes lenta para o time interno\nHIPÓTESE INICIAL: reindexação noturna não concluiu antes do horário comercial\nAÇÃO IMEDIATA: pausar reindexação e priorizar shard quente\nESCALAR PARA: @search-infra se p99 não cair em 15min\n\n## Entrada do Usuário\nAnalise o snapshot de alertas contido abaixo e converta-o para o padrão exato dos exemplos:\n\n<snapshot_alertas>\n2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest\ndelayed after previous job failure, downstream Sentinel starting to lag\n\n</snapshot_alertas>\n",
+          "label": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "29285bd76aa4fa7fe0c1aaa827c73479945dff7b06e2241910d0943bb0ce6660",
+        "promptIdx": 0,
+        "repeatGroupId": "test-2-vars-0",
+        "repeatIndex": 0,
+        "provider": {
+          "id": "openai:gpt-4o-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "ALERTA: Forge - consumer lag 9min and climbing\nIMPACTO: downstream Sentinel starting to lag\nHIPÓTESE INICIAL: batch forge-batch-ingest delayed after previous job failure\nAÇÃO IMEDIATA: monitorar o lag e avaliar necessidade de intervenção\nESCALAR PARA: @data-platform se lag não estabilizar em 10min",
+          "tokenUsage": {
+            "prompt": 676,
+            "completion": 73,
+            "cached": 0,
+            "total": 749,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 1724,
+          "finishReason": "stop",
+          "cost": 0.0001452,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:02 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "1526",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Alerta 3 do CP02 (lag de consumer no Forge)",
+          "vars": {
+            "snapshot_alertas": "2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest\ndelayed after previous job failure, downstream Sentinel starting to lag\n"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "ALERTA:"
+            },
+            {
+              "type": "contains",
+              "value": "IMPACTO:"
+            },
+            {
+              "type": "contains",
+              "value": "HIPÓTESE INICIAL:"
+            },
+            {
+              "type": "contains",
+              "value": "AÇÃO IMEDIATA:"
+            },
+            {
+              "type": "contains",
+              "value": "ESCALAR PARA:"
+            },
+            {
+              "type": "regex",
+              "value": "ESCALAR PARA:.*@\\w+"
+            },
+            {
+              "type": "javascript",
+              "value": "output.trim().split(/\\r?\\n/).length <= 8"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 6,
+        "tokenUsage": {
+          "prompt": 676,
+          "completion": 73,
+          "cached": 0,
+          "total": 749,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_alertas": "2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest\ndelayed after previous job failure, downstream Sentinel starting to lag\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:02 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "1526",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0001452,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ALERTA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "IMPACTO:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HIPÓTESE INICIAL:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "AÇÃO IMEDIATA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ESCALAR PARA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "regex",
+                "value": "ESCALAR PARA:.*@\\w+"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.trim().split(/\\r?\\n/).length <= 8"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "4deeaa1e-4543-4faa-b9d2-7a2c431eeb6a",
+        "latencyMs": 1590,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Você é um Engenheiro de Confiabilidade de Sistemas (SRE) e Especialista em Resposta a Incidentes. Sua tarefa é analisar o snapshot de alertas brutas enviado pelo sistema de monitoramento e padronizar a comunicação do incidente.\n\n## Objetivo\nProcessar o snapshot de alertas fornecido e gerar um resultado estritamente padronizado conforme o modelo dos exemplos.\n\n## Regras e Restrições\n1. **Estrutura Rígida**: Cada alerta processado deve conter exatamente os 5 campos na mesma ordem: ALERTA:, IMPACTO:, HIPÓTESE INICIAL:, AÇÃO IMEDIATA: e ESCALAR PARA:.\n2. **Linguagem Direta**: Mantenha as frases objetivas, técnicas e concisas.\n3. **Fidelidade aos Dados**: Extraia apenas as informações contidas no snapshot fornecido. Não invente métricas ou horários não citados. Cite cada valor exatamente como aparece, sem arredondar nem deduzir, e nunca apresente um limite como valor medido. Exemplo: para `disco 91%/95%`, escreva `disco em 91%/95%`, e não `disco atingiu 95%`.\n4. **Sem Texto Adicional**: Retorne APENAS o bloco de alertas padronizados. Não inclua saudações, preâmbulos nem explicações antes ou depois do resultado.\n\n## Exemplos de Padrão (Few-Shot)\n\nEx 1\nALERTA: Relay - taxa de rejeição de ingestão acima de 2% por 5min\nIMPACTO: ingestão de telemetry degradada para ~12% dos tenants\nHIPÓTESE INICIAL: deploy do Relay às 09:14 reduziu o buffer de ingestão\nAÇÃO IMEDIATA: rollback iniciado via Argo CD\nESCALAR PARA: @relay-core se a rejeição não cair em 10min\n\nEx 2\nALERTA: Forge - lag de ingestão acima de 15min\nIMPACTO: dashboards do Sentinel atrasados para todos os tenants\nHIPÓTESE INICIAL: pico de volume do tenant acme-corp saturou o consumer\nAÇÃO IMEDIATA: aumento manual de partições do consumer do Relay\nESCALAR PARA: @data-platform se lag não estabilizar em 20min\n\nEx 3\nALERTA: Cerebro - latência de busca p99 acima de 4s\nIMPACTO: investigação de incidentes lenta para o time interno\nHIPÓTESE INICIAL: reindexação noturna não concluiu antes do horário comercial\nAÇÃO IMEDIATA: pausar reindexação e priorizar shard quente\nESCALAR PARA: @search-infra se p99 não cair em 15min\n\n## Entrada do Usuário\nAnalise o snapshot de alertas contido abaixo e converta-o para o padrão exato dos exemplos:\n\n<snapshot_alertas>\n2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest\ndelayed after previous job failure, downstream Sentinel starting to lag\n\n</snapshot_alertas>\n",
+          "label": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "29285bd76aa4fa7fe0c1aaa827c73479945dff7b06e2241910d0943bb0ce6660",
+        "promptIdx": 0,
+        "repeatGroupId": "test-2-vars-0",
+        "repeatIndex": 1,
+        "provider": {
+          "id": "openai:gpt-4o-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "ALERTA: Forge - consumer lag 9min and climbing\nIMPACTO: downstream Sentinel starting to lag\nHIPÓTESE INICIAL: batch forge-batch-ingest delayed after previous job failure\nAÇÃO IMEDIATA: monitorar o lag e avaliar necessidade de intervenção\nESCALAR PARA: @data-platform se lag não estabilizar em 10min",
+          "tokenUsage": {
+            "prompt": 676,
+            "completion": 73,
+            "cached": 0,
+            "total": 749,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 1590,
+          "finishReason": "stop",
+          "cost": 0.0001452,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:02 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "1374",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Alerta 3 do CP02 (lag de consumer no Forge)",
+          "vars": {
+            "snapshot_alertas": "2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest\ndelayed after previous job failure, downstream Sentinel starting to lag\n"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "ALERTA:"
+            },
+            {
+              "type": "contains",
+              "value": "IMPACTO:"
+            },
+            {
+              "type": "contains",
+              "value": "HIPÓTESE INICIAL:"
+            },
+            {
+              "type": "contains",
+              "value": "AÇÃO IMEDIATA:"
+            },
+            {
+              "type": "contains",
+              "value": "ESCALAR PARA:"
+            },
+            {
+              "type": "regex",
+              "value": "ESCALAR PARA:.*@\\w+"
+            },
+            {
+              "type": "javascript",
+              "value": "output.trim().split(/\\r?\\n/).length <= 8"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 7,
+        "tokenUsage": {
+          "prompt": 676,
+          "completion": 73,
+          "cached": 0,
+          "total": 749,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_alertas": "2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest\ndelayed after previous job failure, downstream Sentinel starting to lag\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:02 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "1374",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0001452,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ALERTA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "IMPACTO:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "HIPÓTESE INICIAL:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "AÇÃO IMEDIATA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ESCALAR PARA:"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "regex",
+                "value": "ESCALAR PARA:.*@\\w+"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "output.trim().split(/\\r?\\n/).length <= 8"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "0cdd4fdc-18d2-4712-b2eb-f55ce290508b",
+        "latencyMs": 1320,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Você é um Engenheiro de Confiabilidade de Sistemas (SRE) e Especialista em Resposta a Incidentes. Sua tarefa é analisar o snapshot de alertas brutas enviado pelo sistema de monitoramento e padronizar a comunicação do incidente.\n\n## Objetivo\nProcessar o snapshot de alertas fornecido e gerar um resultado estritamente padronizado conforme o modelo dos exemplos.\n\n## Regras e Restrições\n1. **Estrutura Rígida**: Cada alerta processado deve conter exatamente os 5 campos na mesma ordem: ALERTA:, IMPACTO:, HIPÓTESE INICIAL:, AÇÃO IMEDIATA: e ESCALAR PARA:.\n2. **Linguagem Direta**: Mantenha as frases objetivas, técnicas e concisas.\n3. **Fidelidade aos Dados**: Extraia apenas as informações contidas no snapshot fornecido. Não invente métricas ou horários não citados. Cite cada valor exatamente como aparece, sem arredondar nem deduzir, e nunca apresente um limite como valor medido. Exemplo: para `disco 91%/95%`, escreva `disco em 91%/95%`, e não `disco atingiu 95%`.\n4. **Sem Texto Adicional**: Retorne APENAS o bloco de alertas padronizados. Não inclua saudações, preâmbulos nem explicações antes ou depois do resultado.\n\n## Exemplos de Padrão (Few-Shot)\n\nEx 1\nALERTA: Relay - taxa de rejeição de ingestão acima de 2% por 5min\nIMPACTO: ingestão de telemetry degradada para ~12% dos tenants\nHIPÓTESE INICIAL: deploy do Relay às 09:14 reduziu o buffer de ingestão\nAÇÃO IMEDIATA: rollback iniciado via Argo CD\nESCALAR PARA: @relay-core se a rejeição não cair em 10min\n\nEx 2\nALERTA: Forge - lag de ingestão acima de 15min\nIMPACTO: dashboards do Sentinel atrasados para todos os tenants\nHIPÓTESE INICIAL: pico de volume do tenant acme-corp saturou o consumer\nAÇÃO IMEDIATA: aumento manual de partições do consumer do Relay\nESCALAR PARA: @data-platform se lag não estabilizar em 20min\n\nEx 3\nALERTA: Cerebro - latência de busca p99 acima de 4s\nIMPACTO: investigação de incidentes lenta para o time interno\nHIPÓTESE INICIAL: reindexação noturna não concluiu antes do horário comercial\nAÇÃO IMEDIATA: pausar reindexação e priorizar shard quente\nESCALAR PARA: @search-infra se p99 não cair em 15min\n\n## Entrada do Usuário\nAnalise o snapshot de alertas contido abaixo e converta-o para o padrão exato dos exemplos:\n\n<snapshot_alertas>\n2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest\ndelayed after previous job failure, downstream Sentinel starting to lag\n\n</snapshot_alertas>\n",
+          "label": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "29285bd76aa4fa7fe0c1aaa827c73479945dff7b06e2241910d0943bb0ce6660",
+        "promptIdx": 0,
+        "repeatGroupId": "test-2-vars-0",
+        "repeatIndex": 2,
+        "provider": {
+          "id": "openai:gpt-4o-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "ALERTA: Forge - consumer lag 9min and climbing\nIMPACTO: downstream Sentinel starting to lag\nHIPÓTESE INICIAL: batch forge-batch-ingest delayed after previous job failure\nAÇÃO IMEDIATA: monitorar o lag e avaliar necessidade de intervenção\nESCALAR PARA: @data-platform se lag não estabilizar em 10min",
+          "tokenUsage": {
+            "prompt": 676,
+            "completion": 73,
+            "cached": 0,
+            "total": 749,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 1320,
+          "finishReason": "stop",
+          "cost": 0.0001452,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:03 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "1102",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Alerta 3 do CP02 (lag de consumer no Forge)",
+          "vars": {
+            "snapshot_alertas": "2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest\ndelayed after previous job failure, downstream Sentinel starting to lag\n"
+          },
+          "assert": [
+            {
+              "type": "contains",
+              "value": "ALERTA:"
+            },
+            {
+              "type": "contains",
+              "value": "IMPACTO:"
+            },
+            {
+              "type": "contains",
+              "value": "HIPÓTESE INICIAL:"
+            },
+            {
+              "type": "contains",
+              "value": "AÇÃO IMEDIATA:"
+            },
+            {
+              "type": "contains",
+              "value": "ESCALAR PARA:"
+            },
+            {
+              "type": "regex",
+              "value": "ESCALAR PARA:.*@\\w+"
+            },
+            {
+              "type": "javascript",
+              "value": "output.trim().split(/\\r?\\n/).length <= 8"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 8,
+        "tokenUsage": {
+          "prompt": 676,
+          "completion": 73,
+          "cached": 0,
+          "total": 749,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_alertas": "2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest\ndelayed after previous job failure, downstream Sentinel starting to lag\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:03 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "1102",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      }
+    ],
+    "stats": {
+      "successes": 9,
+      "failures": 0,
+      "errors": 0,
+      "tokenUsage": {
+        "prompt": 6132,
+        "completion": 792,
+        "cached": 0,
+        "total": 6924,
+        "numRequests": 9,
+        "completionDetails": {
+          "reasoning": 0,
+          "acceptedPrediction": 0,
+          "rejectedPrediction": 0,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0
+        },
+        "assertions": {
+          "total": 0,
+          "prompt": 0,
+          "completion": 0,
+          "cached": 0,
+          "numRequests": 0,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          }
+        }
+      },
+      "durationMs": 4592,
+      "evaluationDurationMs": 4592
+    },
+    "repeatStability": {
+      "totalGroups": 3,
+      "unstableGroups": 0,
+      "groupsWithErrors": 0,
+      "cachedResults": 0,
+      "groups": [
+        {
+          "repeatGroupId": "test-0-vars-0",
+          "promptIdx": 0,
+          "provider": {
+            "id": "openai:gpt-4o-mini",
+            "label": ""
+          },
+          "description": "Alerta 1 do CP02 (Sentinel no limite de réplicas)",
+          "promptLabel": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "repetitions": 3,
+          "passed": 3,
+          "failed": 0,
+          "errors": 0,
+          "cached": 0,
+          "unstable": false,
+          "passRate": 1,
+          "passRateConfidenceInterval": {
+            "confidenceLevel": 0.95,
+            "lower": 0.43850296824495455,
+            "upper": 1
+          }
+        },
+        {
+          "repeatGroupId": "test-1-vars-0",
+          "promptIdx": 0,
+          "provider": {
+            "id": "openai:gpt-4o-mini",
+            "label": ""
+          },
+          "description": "Alerta 2 do CP02 (rejeição de ingestão no Relay)",
+          "promptLabel": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "repetitions": 3,
+          "passed": 3,
+          "failed": 0,
+          "errors": 0,
+          "cached": 0,
+          "unstable": false,
+          "passRate": 1,
+          "passRateConfidenceInterval": {
+            "confidenceLevel": 0.95,
+            "lower": 0.43850296824495455,
+            "upper": 1
+          }
+        },
+        {
+          "repeatGroupId": "test-2-vars-0",
+          "promptIdx": 0,
+          "provider": {
+            "id": "openai:gpt-4o-mini",
+            "label": ""
+          },
+          "description": "Alerta 3 do CP02 (lag de consumer no Forge)",
+          "promptLabel": "devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs",
+          "repetitions": 3,
+          "passed": 3,
+          "failed": 0,
+          "errors": 0,
+          "cached": 0,
+          "unstable": false,
+          "passRate": 1,
+          "passRateConfidenceInterval": {
+            "confidenceLevel": 0.95,
+            "lower": 0.43850296824495455,
+            "upper": 1
+          }
+        }
+      ]
+    }
+  },
+  "config": {
+    "tags": {},
+    "prompts": [
+      "file:///home/alexandre/Documentos/github/prompt-registry/devops/padronizar-comunicacao-alertas/prompt-sem-frontmatter.cjs"
+    ],
+    "providers": [
+      "openai:gpt-4o-mini"
+    ],
+    "tests": [
+      {
+        "description": "Alerta 1 do CP02 (Sentinel no limite de réplicas)",
+        "vars": {
+          "snapshot_alertas": "2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,\nqueue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries\nsending 4x baseline volume after onboarding new region\n"
+        }
+      },
+      {
+        "description": "Alerta 2 do CP02 (rejeição de ingestão no Relay)",
+        "vars": {
+          "snapshot_alertas": "2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,\nbuffer saturated after deploy 02:55\n"
+        }
+      },
+      {
+        "description": "Alerta 3 do CP02 (lag de consumer no Forge)",
+        "vars": {
+          "snapshot_alertas": "2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest\ndelayed after previous job failure, downstream Sentinel starting to lag\n"
+        }
+      }
+    ],
+    "env": {},
+    "outputPath": [
+      "Evidências/Checkpoint-08/padronizar-comunicacao-alertas-v2.json"
+    ],
+    "extensions": [],
+    "metadata": {},
+    "evaluateOptions": {
+      "repeat": 3,
+      "cache": false
+    },
+    "defaultTest": {
+      "assert": [
+        {
+          "type": "contains",
+          "value": "ALERTA:"
+        },
+        {
+          "type": "contains",
+          "value": "IMPACTO:"
+        },
+        {
+          "type": "contains",
+          "value": "HIPÓTESE INICIAL:"
+        },
+        {
+          "type": "contains",
+          "value": "AÇÃO IMEDIATA:"
+        },
+        {
+          "type": "contains",
+          "value": "ESCALAR PARA:"
+        },
+        {
+          "type": "regex",
+          "value": "ESCALAR PARA:.*@\\w+"
+        },
+        {
+          "type": "javascript",
+          "value": "output.trim().split(/\\r?\\n/).length <= 8"
+        },
+        {
+          "type": "latency",
+          "threshold": 5000
+        },
+        {
+          "type": "cost",
+          "threshold": 0.01
+        }
+      ],
+      "vars": {},
+      "options": {},
+      "metadata": {}
+    },
+    "basePath": "/home/alexandre/Documentos/github/prompt-registry/devops/padronizar-comunicacao-alertas"
+  },
+  "shareableUrl": null,
+  "metadata": {
+    "promptfooVersion": "0.125.1",
+    "nodeVersion": "v25.9.0",
+    "platform": "linux",
+    "arch": "x64",
+    "exportedAt": "2026-11-06T00:05:03.508Z",
+    "evaluationCreatedAt": "2026-11-06T00:04:58.732Z"
+  },
+  "vars": [
+    "snapshot_alertas"
+  ],
+  "runtimeOptions": {
+    "eventSource": "cli",
+    "repeat": 3,
+    "cache": false,
+    "showProgressBar": false,
+    "maxConcurrency": 4
+  }
+}

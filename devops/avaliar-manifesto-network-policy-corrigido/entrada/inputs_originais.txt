@@ -1,0 +1,38 @@
+<snapshot_manifesto>
+# manifesto barrado pela revisão de segurança — permissivo demais
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sentinel-allow
+  namespace: sentinel-prod
+spec:
+  podSelector: {}          # aplica a todos os pods do namespace
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - {}                   # libera QUALQUER origem
+  egress:
+    - {}                   # libera QUALQUER destino
+</snapshot_manifesto>
+
+<snapshot_network_policy>
+NetworkPolicy para o namespace "sentinel-prod":
+- pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de
+  eventos) e do gateway de API da plataforma
+- pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),
+  Cerebro (busca, porta 9200) e DNS interno
+- nada de "allow all" em ingress ou egress
+- política default-deny explícita no namespace
+- toda regra precisa de comentário dizendo qual fluxo legítimo ela libera
+</snapshot_network_policy>
+
+<snapshot_servicos>
+Sentinel     → namespace sentinel-prod, pods com label app=sentinel
+Relay        → namespace relay-prod,    pods com label app=relay
+API gateway  → namespace edge,          pods com label app=api-gateway
+Forge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)
+Cerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)
+DNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53
+</snapshot_servicos>
+

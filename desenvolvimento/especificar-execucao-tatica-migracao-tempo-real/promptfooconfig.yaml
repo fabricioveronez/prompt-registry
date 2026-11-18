@@ -1,0 +1,59 @@
+# Checkpoint 10. Rodar a partir da raiz do repositório:
+# npx promptfoo@latest eval -c desenvolvimento/especificar-execucao-tatica-migracao-tempo-real/promptfooconfig.yaml
+# Passo 3 da cadeia do Forge. A entrada é a saída fixa do passo 2 no CP05, não uma execução ao vivo.
+prompts:
+  - file://prompt-sem-frontmatter.cjs
+providers:
+  - id: openai:gpt-4.1-mini
+    config:
+      # O padrão do promptfoo é 1024 tokens, o que corta o relatório no meio.
+      max_tokens: 8192
+evaluateOptions:
+  # A saída varia entre execuções, e o assert de latência exige chamadas reais, sem cache.
+  repeat: 3
+  cache: false
+tests:
+  - description: Plano de migração do Forge gerado no CP05
+    vars:
+      resultado_prompt_2: file://entrada/resultado_prompt_2.md
+    assert:
+      - type: regex
+        metric: formato
+        value: '## 1\. Padrões de Implementação[\s\S]*## 2\. Escolha da Abordagem[\s\S]*## 3\. Guia de Execução[\s\S]*## 4\. Checklist de Validação'
+      - type: javascript
+        metric: duas_abordagens
+        value: (output.match(/^###\s*Abordagem\s/gm) || []).length >= 2
+      - type: javascript
+        metric: checklist
+        value: (output.match(/^\s*[-*]?\s*\[ \]/gm) || []).length >= 5
+      - type: icontains-all
+        metric: guia_operacional
+        value: [DLQ, idempot, lag]
+      - type: javascript
+        metric: politica_de_retry
+        # O modelo alterna entre "retry", "retries", "retentativa" e o nome do mecanismo (backoff).
+        value: /retr(y|ies)|retentativa|backoff/i.test(output)
+      - type: icontains-any
+        metric: formato_de_schema
+        value: [Avro, Protobuf, JSON Schema]
+      - type: latency
+        threshold: 120000
+      - type: cost
+        threshold: 0.02
+      - type: llm-rubric
+        metric: especificacao_executavel
+        threshold: 0.75
+        provider: openai:gpt-5.6-luna
+        value: |
+          Você avalia uma especificação tática para a migração do pipeline Forge para tempo real,
+          escrita para engenheiros que vão implementá-la e operá-la.
+
+          Critérios (cada um vale 1 ponto):
+          E1. A abordagem de entrega escolhida é justificada pela integridade dos dados e pelo custo de complexidade
+              (ex.: at-least-once com escrita idempotente, ou exactly-once com o preço explicado).
+          E2. O tratamento de erros diz em que situação uma mensagem vai para a DLQ e que há retry com backoff antes disso.
+              O prompt não pede valores: a ausência de números exatos de tentativas ou de tempo não reprova E2.
+          E3. O plano de observabilidade traz métricas com limite ou condição de alerta, e não só nomes de métricas.
+          E4. O checklist de cutover tem itens verificáveis (com número, comparação ou evidência), e não intenções genéricas.
+
+          score = pontos / 4. pass = true somente se E1 e E2 forem atendidos e score >= 0.75.

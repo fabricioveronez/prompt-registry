@@ -1,0 +1,67 @@
+# Regressão: cópia temporária do prompt, instruída a concluir que a causa é o query cache.
+# O prompt.md do repositório não foi alterado. exit code: 100
+
+Cache is disabled.
+Starting evaluation eval-R1X-2026-11-05T23:41:53
+Running 3 test cases (up to 4 at a time)...
+
+┌──────────────────────────────┬──────────────────────────────┬──────────────────────────────┬──────────────────────────────┐
+│ snapshot_config              │ snapshot_metricas            │ snapshot_logs                │ [openai:gpt-5.6-luna]        │
+│                              │                              │                              │ ../../../../../tmp/claude-1… │
+├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+│ file:///tmp/claude-1000/-ho… │ file:///tmp/claude-1000/-ho… │ file:///tmp/claude-1000/-ho… │ [FAIL] # Relatório de        │
+│                              │                              │                              │ Análise de Causa Raiz (RCA)  │
+│                              │                              │                              │ ## 1. Resumo Executivo       │
+│                              │                              │                              │ - **Status do Cluster no     │
+│                              │                              │                              │ Incidente**: Crítico /       │
+│                              │                              │                              │ Degradado, com falhas        │
+│                              │                              │                              │ parciais de busca e rejeição │
+│                              │                              │                              │ de operações de escrita.     │
+│                              │                              │                              │ - **Impacto na Aplicação     │
+│                              │                              │                              │ Java**: Aumento severo da    │
+│                              │                              │                              │ latên...                     │
+├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+│ file:///tmp/claude-1000/-ho… │ file:///tmp/claude-1000/-ho… │ file:///tmp/claude-1000/-ho… │ [FAIL] # Relatório de        │
+│                              │                              │                              │ Análise de Causa Raiz (RCA)  │
+│                              │                              │                              │ ## 1. Resumo Executivo       │
+│                              │                              │                              │ - **Status do Cluster no     │
+│                              │                              │                              │ Incidente**: Crítico /       │
+│                              │                              │                              │ Degradado, com falhas        │
+│                              │                              │                              │ parciais de busca e rejeição │
+│                              │                              │                              │ de operações de escrita.     │
+│                              │                              │                              │ - **Impacto na Aplicação     │
+│                              │                              │                              │ Java**: Aumento expressivo   │
+│                              │                              │                              │ da l...                      │
+├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+│ file:///tmp/claude-1000/-ho… │ file:///tmp/claude-1000/-ho… │ file:///tmp/claude-1000/-ho… │ [FAIL] # Relatório de        │
+│                              │                              │                              │ Análise de Causa Raiz (RCA)  │
+│                              │                              │                              │ ## 1. Resumo Executivo       │
+│                              │                              │                              │ - **Status do Cluster no     │
+│                              │                              │                              │ Incidente**: Crítico e       │
+│                              │                              │                              │ degradado, com falhas        │
+│                              │                              │                              │ parciais de busca e rejeição │
+│                              │                              │                              │ de operações de escrita.     │
+│                              │                              │                              │ - **Impacto na Aplicação     │
+│                              │                              │                              │ Java**: Aumento expressivo   │
+│                              │                              │                              │ da l...                      │
+└──────────────────────────────┴──────────────────────────────┴──────────────────────────────┴──────────────────────────────┘
+✓ Eval complete (ID: eval-R1X-2026-11-05T23:41:53)
+
+» View results: promptfoo view
+» Share with your team: https://promptfoo.app
+» Feedback: https://promptfoo.dev/feedback
+
+Total Tokens: 31.834
+  Provider: 16.409 (7.635 prompt, 8.774 completion, 448 reasoning)
+  Grading: 15.425 (14.497 prompt, 928 completion, 398 reasoning)
+
+Repeat stability:
+  1 repeated group; 0 unstable
+
+Results:
+  0 passed (0%)
+  ✗ 3 failed (100%)
+  0 errors (0%)
+Duration: 27s (concurrency: 4)
+
+Writing output to regressao2.json

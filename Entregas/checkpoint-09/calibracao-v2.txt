@@ -1,0 +1,45 @@
+# Juiz v2 (versão final) contra o gabarito, 5 repetições por saída
+
+real-cp03         C1 2/2  C2 2/2  C3 2/2  C4 0/0  total 6/8  juiz=REPROVA gabarito=REPROVA
+real-cp03         C1 2/2  C2 2/2  C3 2/2  C4 0/0  total 6/8  juiz=REPROVA gabarito=REPROVA
+real-cp03         C1 2/2  C2 2/2  C3 2/2  C4 0/0  total 6/8  juiz=REPROVA gabarito=REPROVA
+real-cp03         C1 2/2  C2 2/2  C3 2/2  C4 0/0  total 6/8  juiz=REPROVA gabarito=REPROVA
+real-cp03         C1 2/2  C2 2/2  C3 2/2  C4 0/0  total 6/8  juiz=REPROVA gabarito=REPROVA
+real-luna         C1 2/2  C2 2/2  C3 1/2  C4 1/1  total 7/8  juiz=APROVA gabarito=APROVA
+real-luna         C1 2/2  C2 2/2  C3 1/1  C4 1/1  total 6/8  juiz=APROVA gabarito=APROVA
+real-luna         C1 2/2  C2 2/2  C3 1/2  C4 1/1  total 7/8  juiz=APROVA gabarito=APROVA
+real-luna         C1 2/2  C2 2/2  C3 1/2  C4 1/1  total 7/8  juiz=APROVA gabarito=APROVA
+real-luna         C1 2/2  C2 2/2  C3 1/1  C4 1/1  total 6/8  juiz=APROVA gabarito=APROVA
+sint-sintomas     C1 0/0  C2 0/0  C3 0/0  C4 0/0  total 0/8  juiz=REPROVA gabarito=REPROVA
+sint-sintomas     C1 0/0  C2 0/0  C3 0/0  C4 0/0  total 0/8  juiz=REPROVA gabarito=REPROVA
+sint-sintomas     C1 0/0  C2 0/0  C3 0/0  C4 0/0  total 0/8  juiz=REPROVA gabarito=REPROVA
+sint-sintomas     C1 0/0  C2 0/0  C3 0/0  C4 0/0  total 0/8  juiz=REPROVA gabarito=REPROVA
+sint-sintomas     C1 0/0  C2 0/0  C3 0/0  C4 0/0  total 0/8  juiz=REPROVA gabarito=REPROVA
+sint-c4-zero      C1 2/2  C2 2/2  C3 2/2  C4 0/0  total 6/8  juiz=REPROVA gabarito=REPROVA
+sint-c4-zero      C1 2/2  C2 2/2  C3 2/2  C4 0/0  total 6/8  juiz=REPROVA gabarito=REPROVA
+sint-c4-zero      C1 2/2  C2 2/2  C3 2/2  C4 0/0  total 6/8  juiz=REPROVA gabarito=REPROVA
+sint-c4-zero      C1 2/2  C2 2/2  C3 2/2  C4 0/0  total 6/8  juiz=REPROVA gabarito=REPROVA
+sint-c4-zero      C1 2/2  C2 2/2  C3 2/2  C4 0/0  total 6/8  juiz=REPROVA gabarito=REPROVA
+sint-c3-zero      C1 2/2  C2 2/2  C3 0/0  C4 2/2  total 6/8  juiz=REPROVA gabarito=REPROVA
+sint-c3-zero      C1 2/2  C2 2/2  C3 0/0  C4 2/2  total 6/8  juiz=REPROVA gabarito=REPROVA
+sint-c3-zero      C1 2/2  C2 2/2  C3 0/0  C4 2/2  total 6/8  juiz=REPROVA gabarito=REPROVA
+sint-c3-zero      C1 2/2  C2 2/2  C3 0/0  C4 2/2  total 6/8  juiz=REPROVA gabarito=REPROVA
+sint-c3-zero      C1 2/2  C2 2/2  C3 0/0  C4 2/2  total 6/8  juiz=REPROVA gabarito=REPROVA
+sint-fronteira-6  C1 2/2  C2 1/1  C3 2/2  C4 1/1  total 6/8  juiz=APROVA gabarito=APROVA
+sint-fronteira-6  C1 2/2  C2 1/1  C3 2/2  C4 1/1  total 6/8  juiz=APROVA gabarito=APROVA
+sint-fronteira-6  C1 2/2  C2 1/2  C3 2/2  C4 1/1  total 7/8  juiz=APROVA gabarito=APROVA
+sint-fronteira-6  C1 2/2  C2 1/1  C3 2/2  C4 1/1  total 6/8  juiz=APROVA gabarito=APROVA
+sint-fronteira-6  C1 2/2  C2 1/1  C3 2/2  C4 1/1  total 6/8  juiz=APROVA gabarito=APROVA
+sint-fronteira-5  C1 2/2  C2 1/1  C3 1/1  C4 1/1  total 5/8  juiz=REPROVA gabarito=REPROVA
+sint-fronteira-5  C1 2/2  C2 1/1  C3 1/1  C4 1/1  total 5/8  juiz=REPROVA gabarito=REPROVA
+sint-fronteira-5  C1 2/2  C2 1/1  C3 1/1  C4 1/1  total 5/8  juiz=REPROVA gabarito=REPROVA
+sint-fronteira-5  C1 2/2  C2 1/1  C3 1/1  C4 1/1  total 5/8  juiz=REPROVA gabarito=REPROVA
+sint-fronteira-5  C1 2/2  C2 1/1  C3 1/1  C4 1/1  total 5/8  juiz=REPROVA gabarito=REPROVA
+sint-excelente    C1 2/2  C2 2/2  C3 2/2  C4 2/2  total 8/8  juiz=APROVA gabarito=APROVA
+sint-excelente    C1 2/2  C2 2/2  C3 2/2  C4 2/2  total 8/8  juiz=APROVA gabarito=APROVA
+sint-excelente    C1 2/2  C2 2/2  C3 2/2  C4 2/2  total 8/8  juiz=APROVA gabarito=APROVA
+sint-excelente    C1 2/2  C2 2/2  C3 2/2  C4 2/2  total 8/8  juiz=APROVA gabarito=APROVA
+sint-excelente    C1 2/2  C2 2/2  C3 2/2  C4 2/2  total 8/8  juiz=APROVA gabarito=APROVA
+
+Legenda: gabarito/juiz; "!" = diferença acima de 1 ponto.
+Execuções: 40 | fora da tolerância: 0 | decisões divergentes: 0 | juiz incoerente: 0

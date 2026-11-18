@@ -1,0 +1,49 @@
+# Checkpoint 08: nota-de-triagem. Rodar a partir da raiz do repositório:
+# npx promptfoo@latest eval -c devops/padronizar-comunicacao-alertas/promptfooconfig.yaml
+prompts:
+  - file://prompt-sem-frontmatter.cjs
+providers:
+  - openai:gpt-4o-mini
+  # Segundo fornecedor do enunciado: descomente depois de incluir ANTHROPIC_API_KEY no .env.
+  # - anthropic:messages:claude-haiku-5-5
+evaluateOptions:
+  # A saída varia entre execuções, e o assert de latência exige chamadas reais, sem cache.
+  repeat: 3
+  cache: false
+defaultTest:
+  assert:
+    - type: contains
+      value: 'ALERTA:'
+    - type: contains
+      value: 'IMPACTO:'
+    - type: contains
+      value: 'HIPÓTESE INICIAL:'
+    - type: contains
+      value: 'AÇÃO IMEDIATA:'
+    - type: contains
+      value: 'ESCALAR PARA:'
+    - type: regex
+      value: 'ESCALAR PARA:.*@\w+'
+    - type: javascript
+      value: output.trim().split(/\r?\n/).length <= 8
+    - type: latency
+      threshold: 5000
+    - type: cost
+      threshold: 0.01
+tests:
+  - description: Alerta 1 do CP02 (Sentinel no limite de réplicas)
+    vars:
+      snapshot_alertas: |
+        2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max replicas (60/60) on sentinel-api,
+        queue depth on Relay growing 2k/min, CPU avg 88%, tenant stark-industries
+        sending 4x baseline volume after onboarding new region
+  - description: Alerta 2 do CP02 (rejeição de ingestão no Relay)
+    vars:
+      snapshot_alertas: |
+        2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for 8min, tenant wakanda-systems,
+        buffer saturated after deploy 02:55
+  - description: Alerta 3 do CP02 (lag de consumer no Forge)
+    vars:
+      snapshot_alertas: |
+        2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and climbing, batch forge-batch-ingest
+        delayed after previous job failure, downstream Sentinel starting to lag

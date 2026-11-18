@@ -1,0 +1,99 @@
+# Regressão provocada (local): patch regressao-backpressure.patch aplicado numa cópia do prompt.
+# Remove do template a etapa de trade-offs e a seção 3 (matriz comparativa).
+# Comando: npx promptfoo@0.125.1 eval -c devops/decidir-solucao-backpressure/promptfooconfig.yaml
+# Exit code: 100 (barrado).
+
+Cache is disabled.
+Starting evaluation eval-4xP-2026-11-10T10:41:22
+Running 3 test cases (up to 4 at a time)...
+
+┌────────────────────────────────────────┬────────────────────────────────────────┬────────────────────────────────────────┐
+│ snapshot_cenario                       │ snapshot_caminhos                      │ [openai:gpt-4.1-mini]                  │
+│                                        │                                        │ devops/decidir-solucao-backpressure/p… │
+├────────────────────────────────────────┼────────────────────────────────────────┼────────────────────────────────────────┤
+│ file://entrada/cenario_relay.txt       │ file://entrada/caminhos_relay.txt      │ [FAIL] ```markdown                     │
+│                                        │                                        │ # 📊 Relatório de Tomada de Decisão:   │
+│                                        │                                        │ Resolução de Backpressure              │
+│                                        │                                        │ ## 1. Análise do Cenário e Diagnóstico │
+│                                        │                                        │ do Gargalo                             │
+│                                        │                                        │ - **Resumo do Problema**:              │
+│                                        │                                        │   O gargalo principal está no Relay, … │
+│                                        │                                        │ atua como barramento central para toda │
+│                                        │                                        │ a telemetria ...                       │
+├────────────────────────────────────────┼────────────────────────────────────────┼────────────────────────────────────────┤
+│ file://entrada/cenario_relay.txt       │ file://entrada/caminhos_relay.txt      │ [FAIL] ```markdown                     │
+│                                        │                                        │ # 📊 Relatório de Tomada de Decisão:   │
+│                                        │                                        │ Resolução de Backpressure              │
+│                                        │                                        │ ## 1. Análise do Cenário e Diagnóstico │
+│                                        │                                        │ do Gargalo                             │
+│                                        │                                        │ - **Resumo do Problema**:              │
+│                                        │                                        │   O gargalo principal está no Relay, … │
+│                                        │                                        │ atua como barramento central para toda │
+│                                        │                                        │ a telemetria ...                       │
+├────────────────────────────────────────┼────────────────────────────────────────┼────────────────────────────────────────┤
+│ file://entrada/cenario_relay.txt       │ file://entrada/caminhos_relay.txt      │ [FAIL] ```markdown                     │
+│                                        │                                        │ # 📊 Relatório de Tomada de Decisão:   │
+│                                        │                                        │ Resolução de Backpressure              │
+│                                        │                                        │ ## 1. Análise do Cenário e Diagnóstico │
+│                                        │                                        │ do Gargalo                             │
+│                                        │                                        │ - **Resumo do Problema**:              │
+│                                        │                                        │   O gargalo principal está no Relay, … │
+│                                        │                                        │ atua como barramento central para toda │
+│                                        │                                        │ a telemetria ...                       │
+└────────────────────────────────────────┴────────────────────────────────────────┴────────────────────────────────────────┘
+✓ Eval complete (ID: eval-4xP-2026-11-10T10:41:22)
+
+» Share with your team: https://promptfoo.app
+» Feedback: https://promptfoo.dev/feedback
+
+Total Tokens: 16.738
+  Provider: 9.088 (3.714 prompt, 5.374 completion)
+  Grading: 7.650 (6.727 prompt, 923 completion, 520 reasoning)
+
+Repeat stability:
+  1 repeated group; 0 unstable
+
+Results:
+  0 passed (0%)
+  ✗ 3 failed (100%)
+  0 errors (0%)
+Duration: 17s (concurrency: 4)
+
+
+# Resumo por assert
+
+== regressao-estrutural  pass=0 fail=3 errors=0
+   custo geração ~US$ 0.0095 | latência ms: 12001, 11188, 10315
+   XX  formato: 0/3
+        - Expected output to match regex "## 1\. Análise do Cenário[\s\S]*## 2\. Avaliação dos Caminhos[\s\S]*## 3\. Matriz Comparativa[\s\S]*## 4\. Recomendação[\s\S]*##
+        - Expected output to match regex "## 1\. Análise do Cenário[\s\S]*## 2\. Avaliação dos Caminhos[\s\S]*## 3\. Matriz Comparativa[\s\S]*## 4\. Recomendação[\s\S]*##
+        - Expected output to match regex "## 1\. Análise do Cenário[\s\S]*## 2\. Avaliação dos Caminhos[\s\S]*## 3\. Matriz Comparativa[\s\S]*## 4\. Recomendação[\s\S]*##
+   OK  quatro_caminhos: 3/3
+   XX  matriz_completa: 0/3
+        - Custom function returned false
+const matriz = (output.split(/## 3\./)[1] || '').split(/## 4\./)[0];
+const linhas = matriz.split(/\r?\n/).filter((l) => /^\|/.tes
+        - Custom function returned false
+const matriz = (output.split(/## 3\./)[1] || '').split(/## 4\./)[0];
+const linhas = matriz.split(/\r?\n/).filter((l) => /^\|/.tes
+        - Custom function returned false
+const matriz = (output.split(/## 3\./)[1] || '').split(/## 4\./)[0];
+const linhas = matriz.split(/\r?\n/).filter((l) => /^\|/.tes
+   OK  escolha_explicita: 3/3
+   OK  latency: 3/3
+   OK  cost: 3/3
+   OK  decisao_respeita_restricoes: 3/3 scores=0.75,0.75,0.75
+
+# Tentativa anterior, que NÃO regrediu: instrução para aceitar descarte de mensagens.
+# O modelo ignorou a instrução (o cenário proíbe perda) e as 3 saídas passaram no juiz.
+# O gate mede a saída, não o diff do prompt: exit 0 aqui é o comportamento correto.
+
+== regressao-descarte (não regrediu)  pass=3 fail=0 errors=0
+   custo geração ~US$ 0.0091 | latência ms: 11259, 10743, 9986
+   OK  formato: 3/3
+   OK  quatro_caminhos: 3/3
+   OK  matriz_completa: 3/3
+   OK  escolha_explicita: 3/3
+   OK  latency: 3/3
+   OK  cost: 3/3
+   OK  decisao_respeita_restricoes: 3/3 scores=0.75,0.75,0.75

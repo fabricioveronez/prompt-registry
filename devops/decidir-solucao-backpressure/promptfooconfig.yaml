@@ -1,0 +1,58 @@
+# Checkpoint 10. Rodar a partir da raiz do repositório:
+# npx promptfoo@latest eval -c devops/decidir-solucao-backpressure/promptfooconfig.yaml
+prompts:
+  - file://prompt-sem-frontmatter.cjs
+providers:
+  - id: openai:gpt-4.1-mini
+    config:
+      # O padrão do promptfoo é 1024 tokens, o que corta o relatório no meio.
+      max_tokens: 8192
+evaluateOptions:
+  # A saída varia entre execuções, e o assert de latência exige chamadas reais, sem cache.
+  repeat: 3
+  cache: false
+tests:
+  - description: Backpressure no Relay do CP04
+    vars:
+      snapshot_cenario: file://entrada/cenario_relay.txt
+      snapshot_caminhos: file://entrada/caminhos_relay.txt
+    assert:
+      # Camada determinística: estrutura, cobertura dos caminhos, latência e custo
+      - type: regex
+        metric: formato
+        value: '## 1\. Análise do Cenário[\s\S]*## 2\. Avaliação dos Caminhos[\s\S]*## 3\. Matriz Comparativa[\s\S]*## 4\. Recomendação[\s\S]*## 5\. Plano de Implementação'
+      - type: javascript
+        metric: quatro_caminhos
+        # O snapshot traz 4 caminhos, e o prompt pede para avaliar todos.
+        value: (output.match(/^###\s.*Caminho\s*\d/gm) || []).length >= 4
+      - type: javascript
+        metric: matriz_completa
+        value: |
+          const matriz = (output.split(/## 3\./)[1] || '').split(/## 4\./)[0];
+          const linhas = matriz.split(/\r?\n/).filter((l) => /^\|/.test(l) && !/^\|\s*-/.test(l));
+          return linhas.length >= 5; // cabeçalho + 4 caminhos
+      - type: contains
+        metric: escolha_explicita
+        value: '🏆'
+      - type: latency
+        threshold: 60000
+      - type: cost
+        threshold: 0.01
+      # Juiz: as restrições do cenário pedem julgamento, não comparação de texto.
+      - type: llm-rubric
+        metric: decisao_respeita_restricoes
+        threshold: 0.75
+        provider: openai:gpt-5.6-luna
+        value: |
+          Você avalia a recomendação de um relatório de decisão sobre backpressure no barramento Relay.
+          Restrições do cenário: o alerting do Sentinel não pode atrasar mais que 60s; a ingestão do Forge
+          pode atrasar até 15min; o orçamento de infra já está 8% acima do previsto; perda de telemetria é inaceitável.
+          Os caminhos dados eram: priorizar o Sentinel, dead-letter queue, particionar o Relay por cliente e autoscaling de consumidores.
+
+          Critérios (cada um vale 1 ponto):
+          R1. A recomendação final protege o SLA de 60s do Sentinel diante do pico de 320k msgs/s.
+          R2. A recomendação não aceita perda de telemetria: não propõe descartar mensagens, e se usa DLQ prevê o reprocessamento.
+          R3. A recomendação trata o orçamento estourado: não adota escalar consumidores sem limite como solução principal sem discutir o custo.
+          R4. A justificativa usa os números do cenário (180k e 320k msgs/s, retenção de 4h, 60s, 15min), e não argumentos genéricos.
+
+          score = pontos / 4. pass = true somente se R1 e R2 forem atendidos e score >= 0.75.

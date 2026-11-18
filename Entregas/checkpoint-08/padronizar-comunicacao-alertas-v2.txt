@@ -1,0 +1,100 @@
+# Comando: npx promptfoo@latest eval -c devops/padronizar-comunicacao-alertas/promptfooconfig.yaml
+
+Cache is disabled.
+Starting evaluation eval-xpV-2026-11-06T00:04:58
+Running 9 test cases (up to 4 at a time)...
+
+┌────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────────────┐
+│ snapshot_alertas                                           │ [openai:gpt-4o-mini]                                       │
+│                                                            │ devops/padronizar-comunicacao-alertas/prompt-sem-frontmat… │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ 2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max      │ [PASS] ALERTA: Sentinel - autoscaler atingiu o máximo de   │
+│ replicas (60/60) on sentinel-api,                          │ réplicas (60/60) no sentinel-api                           │
+│ queue depth on Relay growing 2k/min, CPU avg 88%, tenant   │ IMPACTO: profundidade da fila no Relay crescendo 2k/min,   │
+│ stark-industries                                           │ CPU média em 88%                                           │
+│ sending 4x baseline volume after onboarding new region     │ HIPÓTESE INICIAL: tenant stark-industries enviando 4x o    │
+│                                                            │ volume base após onboarding de...                          │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ 2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max      │ [PASS] ALERTA: Sentinel - autoscaler atingiu o máximo de   │
+│ replicas (60/60) on sentinel-api,                          │ réplicas (60/60) no sentinel-api                           │
+│ queue depth on Relay growing 2k/min, CPU avg 88%, tenant   │ IMPACTO: profundidade da fila no Relay crescendo 2k/min,   │
+│ stark-industries                                           │ CPU média em 88%                                           │
+│ sending 4x baseline volume after onboarding new region     │ HIPÓTESE INICIAL: tenant stark-industries enviando 4x      │
+│                                                            │ volume base após onboarding de n...                        │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ 2026-05-12 14:02:09 UTC [Sentinel] autoscaler hit max      │ [PASS] ALERTA: Sentinel - autoscaler atingiu o máximo de   │
+│ replicas (60/60) on sentinel-api,                          │ réplicas (60/60) no sentinel-api                           │
+│ queue depth on Relay growing 2k/min, CPU avg 88%, tenant   │ IMPACTO: profundidade da fila no Relay crescendo 2k/min,   │
+│ stark-industries                                           │ CPU média em 88%                                           │
+│ sending 4x baseline volume after onboarding new region     │ HIPÓTESE INICIAL: tenant stark-industries enviando 4x o    │
+│                                                            │ volume base após onboarding de...                          │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ 2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for  │ [PASS] ALERTA: Relay - taxa de rejeição de ingestão em 6%  │
+│ 8min, tenant wakanda-systems,                              │ por 8min                                                   │
+│ buffer saturated after deploy 02:55                        │ IMPACTO: ingestão de telemetry degradada para o tenant     │
+│                                                            │ wakanda-systems                                            │
+│                                                            │ HIPÓTESE INICIAL: buffer saturado após deploy às 02:55     │
+│                                                            │ AÇÃO IMEDIATA: rollback iniciado via Argo CD               │
+│                                                            │ ESCALAR PARA: @r...                                        │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ 2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for  │ [PASS] ALERTA: Relay - taxa de rejeição de ingestão em 6%  │
+│ 8min, tenant wakanda-systems,                              │ por 8min                                                   │
+│ buffer saturated after deploy 02:55                        │ IMPACTO: ingestão de telemetry degradada para tenant       │
+│                                                            │ wakanda-systems                                            │
+│                                                            │ HIPÓTESE INICIAL: buffer saturado após deploy às 02:55     │
+│                                                            │ AÇÃO IMEDIATA: rollback iniciado via Argo CD               │
+│                                                            │ ESCALAR PARA: @rel...                                      │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ 2026-05-13 03:11:00 UTC [Relay] ingest reject rate 6% for  │ [PASS] ALERTA: Relay - taxa de rejeição de ingestão em 6%  │
+│ 8min, tenant wakanda-systems,                              │ por 8min                                                   │
+│ buffer saturated after deploy 02:55                        │ IMPACTO: ingestão de telemetry degradada para o tenant     │
+│                                                            │ wakanda-systems                                            │
+│                                                            │ HIPÓTESE INICIAL: buffer saturado após deploy às 02:55     │
+│                                                            │ AÇÃO IMEDIATA: rollback iniciado                           │
+│                                                            │ ESCALAR PARA: @relay-core se...                            │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ 2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and      │ [PASS] ALERTA: Forge - consumer lag 9min and climbing      │
+│ climbing, batch forge-batch-ingest                         │ IMPACTO: downstream Sentinel starting to lag               │
+│ delayed after previous job failure, downstream Sentinel    │ HIPÓTESE INICIAL: batch forge-batch-ingest delayed after   │
+│ starting to lag                                            │ previous job failure                                       │
+│                                                            │ AÇÃO IMEDIATA: monitorar o lag e avaliar necessidade de    │
+│                                                            │ intervenção                                                │
+│                                                            │ ESCALAR P...                                               │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ 2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and      │ [PASS] ALERTA: Forge - consumer lag 9min and climbing      │
+│ climbing, batch forge-batch-ingest                         │ IMPACTO: downstream Sentinel starting to lag               │
+│ delayed after previous job failure, downstream Sentinel    │ HIPÓTESE INICIAL: batch forge-batch-ingest delayed after   │
+│ starting to lag                                            │ previous job failure                                       │
+│                                                            │ AÇÃO IMEDIATA: monitorar o lag e avaliar necessidade de    │
+│                                                            │ intervenção                                                │
+│                                                            │ ESCALAR P...                                               │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ 2026-05-13 11:40:22 UTC [Forge] consumer lag 9min and      │ [PASS] ALERTA: Forge - consumer lag 9min and climbing      │
+│ climbing, batch forge-batch-ingest                         │ IMPACTO: downstream Sentinel starting to lag               │
+│ delayed after previous job failure, downstream Sentinel    │ HIPÓTESE INICIAL: batch forge-batch-ingest delayed after   │
+│ starting to lag                                            │ previous job failure                                       │
+│                                                            │ AÇÃO IMEDIATA: monitorar o lag e avaliar necessidade de    │
+│                                                            │ intervenção                                                │
+│                                                            │ ESCALAR P...                                               │
+└────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────┘
+✓ Eval complete (ID: eval-xpV-2026-11-06T00:04:58)
+
+» View results: promptfoo view
+» Share with your team: https://promptfoo.app
+» Feedback: https://promptfoo.dev/feedback
+
+Total Tokens: 6.924
+  Provider: 6.924 (6.132 prompt, 792 completion)
+
+Repeat stability:
+  3 repeated groups; 0 unstable
+
+Results:
+  ✓ 9 passed (100%)
+  0 failed (0%)
+  0 errors (0%)
+Duration: 5s (concurrency: 4)
+
+Writing output to Evidências/Checkpoint-08/padronizar-comunicacao-alertas-v2.json
+
+# exit code: 0

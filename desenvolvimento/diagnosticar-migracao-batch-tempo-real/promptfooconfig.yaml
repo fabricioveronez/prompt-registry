@@ -1,0 +1,57 @@
+# Checkpoint 10. Rodar a partir da raiz do repositório:
+# npx promptfoo@latest eval -c desenvolvimento/diagnosticar-migracao-batch-tempo-real/promptfooconfig.yaml
+# Passo 1 da cadeia do Forge. A entrada é fixa (CP05) para o teste não depender de outro prompt.
+prompts:
+  - file://prompt-sem-frontmatter.cjs
+providers:
+  - id: openai:gpt-4.1-mini
+    config:
+      # O padrão do promptfoo é 1024 tokens, o que corta o relatório no meio.
+      max_tokens: 8192
+evaluateOptions:
+  # A saída varia entre execuções, e o assert de latência exige chamadas reais, sem cache.
+  repeat: 3
+  cache: false
+tests:
+  - description: Documentação do Forge do CP05
+    vars:
+      dados_do_sistema_e_ambiente: file://entrada/sistema_forge.txt
+    assert:
+      # Camada determinística: estrutura, contrato com o passo 2, latência e custo
+      - type: regex
+        metric: formato
+        value: '## 1\. Mapeamento do Estado Atual[\s\S]*## 2\. Análise de Caminhos[\s\S]*## 3\. Recomendação Técnica[\s\S]*## 4\. Bloco de Exportação'
+      - type: javascript
+        metric: dois_caminhos
+        value: (output.match(/^###\s*Caminho\s/gm) || []).length >= 2
+      - type: regex
+        metric: bloco_passo1
+        # O passo 2 consome este bloco: sem ele a cadeia quebra.
+        value: '<passo1_result>[\s\S]{200,}</passo1_result>'
+      - type: icontains-all
+        metric: dependentes_citados
+        value: [Sentinel, Cerebro, Pepper]
+      - type: latency
+        threshold: 120000
+      - type: cost
+        threshold: 0.02
+      - type: llm-rubric
+        metric: diagnostico_fiel
+        threshold: 0.75
+        provider: openai:gpt-5.6-luna
+        value: |
+          Você avalia um diagnóstico de arquitetura para migrar o pipeline Forge de lote para tempo real.
+          O que a documentação informa: job cron a cada 60min; 14 etapas em Spark com ~40min no total;
+          tabelas no warehouse particionadas por hora; se um lote falha, o próximo acumula o dobro;
+          dependentes Sentinel, Cerebro e billing da Pepper; a migração deve ser em passos, reversível, sem big-bang.
+          A documentação NÃO informa taxa de eventos, volume em GB, número de partições nem a tecnologia do Relay.
+
+          Critérios (cada um vale 1 ponto):
+          D1. A recomendação é compatível com migração incremental e reversível (nenhuma virada única).
+          D2. O diagnóstico identifica a falha em cascata (lote falho dobra o próximo) como gargalo ou risco.
+          D3. Não inventa números de volumetria ausentes da documentação (taxa de eventos, volume, partições);
+              quando estima, declara que é estimativa ou lacuna. Ordens de grandeza típicas de uma tecnologia
+              (ex.: "latência de segundos" com streaming) não contam como dado inventado.
+          D4. A justificativa da escolha compara custo, complexidade, latência e impacto operacional.
+
+          score = pontos / 4. pass = true somente se D1 e D3 forem atendidos e score >= 0.75.

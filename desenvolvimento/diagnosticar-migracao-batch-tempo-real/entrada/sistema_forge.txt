@@ -1,0 +1,16 @@
+O Forge é o pipeline de dados da Aegis — é ele que pega o telemetry e transforma em tabela consultável. Hoje ele roda em lote (batch): de hora em hora um job acorda, lê tudo que acumulou e processa de uma vez. Foi assim que foi montado anos atrás. Há a necessidade de mudar pra um modelo orientado a eventos (event-driven): em vez de esperar fechar a hora, o Forge passa a consumir cada evento do Relay assim que ele chega e processar quase em tempo real.
+
+Estado atual do Forge:
+
+Forge hoje:
+- ingestão: um job em cron acorda a cada 60min (o "forge-batch-ingest")
+- transformação: 14 etapas de processamento encadeadas (em Spark), ~40min no total
+- destino: grava em tabelas no data warehouse, particionadas por hora
+- ponto frágil: se um lote falha, o próximo acumula o dobro de volume
+- quem depende do Forge: Sentinel (lê as tabelas agregadas), Cerebro (indexa
+  os eventos transformados) e os relatórios de billing da Pepper (rodam de madrugada)
+
+O que a migração precisa garantir:
+- consumir do Relay continuamente, processando em pequenos blocos no lugar do lote de 1h
+- manter quem depende do Forge funcionando durante a transição
+- nada de virada única (big-bang): a migração tem que ir em passos e poder voltar atrás

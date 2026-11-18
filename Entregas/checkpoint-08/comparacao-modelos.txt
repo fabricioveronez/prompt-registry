@@ -1,0 +1,21 @@
+# Comparação de modelos no config de NetworkPolicy e de pods, prompt em ajuste. Sem cache.
+# Rodada A (3 repetições), antes de trocar o modelo; rodada B (5 repetições), só manifesto.
+
+## Rodada A
+gpt-4o-mini, pods                   6/9   latência   1.4-  5.8s  custo máx US$ 0.00035  falhas: {'latency': 3}
+gpt-4o-mini, manifesto              0/3   latência   8.5-  8.7s  custo máx US$ 0.00057  falhas: {'latency': 3, 'egress_forge_cerebro': 2}
+gpt-4.1-mini, pods                  9/9   latência   1.0-  3.8s  custo máx US$ 0.00115  falhas: -
+gpt-4.1-mini, manifesto             2/3   latência   4.0-  9.2s  custo máx US$ 0.00166  falhas: {'latency': 1}
+gpt-5.4-nano, pods                  6/9   latência   3.3-  4.9s  custo máx US$ 0.00101  falhas: {'icontains': 3, 'not-icontains': 9}
+gpt-5.4-nano, manifesto             0/3   latência   6.0-  7.8s  custo máx US$ 0.00149  falhas: {'sem_allow_all': 3, 'latency': 3, 'yaml_networkpolicy': 1, 'regras_comentadas': 1}
+gpt-5-nano, pods                    0/9   latência  10.9- 38.2s  custo máx US$ 0.00269  falhas: {'latency': 9, 'icontains': 2, 'not-icontains': 6}
+gpt-5-nano, manifesto               0/3   latência  44.6- 54.9s  custo máx US$ 0.00404  falhas: {'egress_forge_cerebro': 2, 'regras_comentadas': 1, 'latency': 3}
+gpt-5.6-luna, pods                  3/9   latência   2.2-  7.6s  custo máx US$ 0.00095  falhas: {'latency': 6}
+gpt-5.6-luna, manifesto             0/3   latência  11.1- 11.6s  custo máx US$ 0.00170  falhas: {'sem_allow_all': 1, 'latency': 3}
+
+## Rodada B
+gpt-5.4-mini, manifesto             4/5   latência   2.6-  3.2s  custo máx US$ 0.00431  falhas: {'sem_allow_all': 1}
+gpt-4o, manifesto                   0/5   latência   5.7-  6.2s  custo máx US$ 0.00981  falhas: {'latency': 5}
+gpt-4.1, manifesto                  5/5   latência   3.2-  3.9s  custo máx US$ 0.00837  falhas: -
+gpt-5.1, manifesto                  0/5   latência   5.1-  5.9s  custo máx US$ 0.01016  falhas: {'ingress_relay': 3, 'latency': 5, 'cost': 2, 'sem_allow_all': 1, 'egress_forge_cerebro': 1, 'regras_comentadas': 1}
+gpt-5.6-terra, manifesto            0/5   latência   5.7- 12.1s  custo máx US$ 0.01456  falhas: {'sem_allow_all': 2, 'latency': 5, 'cost': 5, 'ingress_relay': 2}

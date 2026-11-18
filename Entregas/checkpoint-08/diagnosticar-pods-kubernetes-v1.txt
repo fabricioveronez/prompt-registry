@@ -1,0 +1,120 @@
+# Comando: npx promptfoo@latest eval -c devops/diagnosticar-pods-kubernetes/promptfooconfig.yaml
+
+Cache is disabled.
+Starting evaluation eval-vrm-2026-11-05T23:58:36
+Running 9 test cases (up to 4 at a time)...
+
+┌────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────────────┐
+│ snapshot                                                   │ [openai:gpt-4o-mini]                                       │
+│                                                            │ devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatte… │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ file:///home/alexandre/Documentos/github/prompt-registry/… │ [PASS] ## 🚨 Relatório de Diagnóstico de Incidentes -      │
+│                                                            │ Kubernetes                                                 │
+│                                                            │ ### 1. Resumo Executivo                                    │
+│                                                            │ - **Pods Analisados**: 4                                   │
+│                                                            │ - **Pods Com Problema**: 1                                 │
+│                                                            │ - **Severidade Geral**: Alta                               │
+│                                                            │ ---                                                        │
+│                                                            │ ### 2. Análise Detalhada por Pod                           │
+│                                                            │ #### Pod: `sentinel-api-7d9c8b6f4-h4m2t`                   │
+│                                                            │ - ...                                                      │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ file:///home/alexandre/Documentos/github/prompt-registry/… │ [PASS] ## 🚨 Relatório de Diagnóstico de Incidentes -      │
+│                                                            │ Kubernetes                                                 │
+│                                                            │ ### 1. Resumo Executivo                                    │
+│                                                            │ - **Pods Analisados**: 4                                   │
+│                                                            │ - **Pods Com Problema**: 1                                 │
+│                                                            │ - **Severidade Geral**: Alta                               │
+│                                                            │ ---                                                        │
+│                                                            │ ### 2. Análise Detalhada por Pod                           │
+│                                                            │ #### Pod: `sentinel-api-7d9c8b6f4-h4m2t`                   │
+│                                                            │ - ...                                                      │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ file:///home/alexandre/Documentos/github/prompt-registry/… │ [PASS] ## 🚨 Relatório de Diagnóstico de Incidentes -      │
+│                                                            │ Kubernetes                                                 │
+│                                                            │ ### 1. Resumo Executivo                                    │
+│                                                            │ - **Pods Analisados**: 4                                   │
+│                                                            │ - **Pods Com Problema**: 1                                 │
+│                                                            │ - **Severidade Geral**: Alta                               │
+│                                                            │ ---                                                        │
+│                                                            │ ### 2. Análise Detalhada por Pod                           │
+│                                                            │ #### Pod: `sentinel-api-7d9c8b6f4-h4m2t`                   │
+│                                                            │ - ...                                                      │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ file:///home/alexandre/Documentos/github/prompt-registry/… │ [FAIL] ## 🚨 Relatório de Diagnóstico de Incidentes -      │
+│                                                            │ Kubernetes                                                 │
+│                                                            │ ### 1. Resumo Executivo                                    │
+│                                                            │ - **Pods Analisados**: 4                                   │
+│                                                            │ - **Pods Com Problema**: 2                                 │
+│                                                            │ - **Severidade Geral**: Alta                               │
+│                                                            │ ---                                                        │
+│                                                            │ ### 2. Análise Detalhada por Pod                           │
+│                                                            │ #### Pod: `sentinel-api-7d9c8b6f4-zzp10`                   │
+│                                                            │ - ...                                                      │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ file:///home/alexandre/Documentos/github/prompt-registry/… │ [FAIL] ## 🚨 Relatório de Diagnóstico de Incidentes -      │
+│                                                            │ Kubernetes                                                 │
+│                                                            │ ### 1. Resumo Executivo                                    │
+│                                                            │ - **Pods Analisados**: 4                                   │
+│                                                            │ - **Pods Com Problema**: 2                                 │
+│                                                            │ - **Severidade Geral**: Alta                               │
+│                                                            │ ---                                                        │
+│                                                            │ ### 2. Análise Detalhada por Pod                           │
+│                                                            │ #### Pod: `sentinel-api-7d9c8b6f4-zzp10`                   │
+│                                                            │ - ...                                                      │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ file:///home/alexandre/Documentos/github/prompt-registry/… │ [FAIL] ## 🚨 Relatório de Diagnóstico de Incidentes -      │
+│                                                            │ Kubernetes                                                 │
+│                                                            │ ### 1. Resumo Executivo                                    │
+│                                                            │ - **Pods Analisados**: 4                                   │
+│                                                            │ - **Pods Com Problema**: 2                                 │
+│                                                            │ - **Severidade Geral**: Alta                               │
+│                                                            │ ---                                                        │
+│                                                            │ ### 2. Análise Detalhada por Pod                           │
+│                                                            │ #### Pod: `sentinel-api-7d9c8b6f4-zzp10`                   │
+│                                                            │ - ...                                                      │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ file:///home/alexandre/Documentos/github/prompt-registry/… │ [PASS] ## ✅ Status da Aplicação: Saudável                 │
+│                                                            │ - **Pods Analisados**: 4                                   │
+│                                                            │ - **Status**: Todos os pods estão operando normalmente     │
+│                                                            │ (`Running`), sem eventos de erro ou reinicializações       │
+│                                                            │ anômalas.                                                  │
+│                                                            │ - **Ação Recomendada**: Nenhuma ação necessária no         │
+│                                                            │ momento.                                                   │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ file:///home/alexandre/Documentos/github/prompt-registry/… │ [PASS] ## ✅ Status da Aplicação: Saudável                 │
+│                                                            │ - **Pods Analisados**: 4                                   │
+│                                                            │ - **Status**: Todos os pods estão operando normalmente     │
+│                                                            │ (`Running`), sem eventos de erro ou reinicializações       │
+│                                                            │ anômalas.                                                  │
+│                                                            │ - **Ação Recomendada**: Nenhuma ação necessária no         │
+│                                                            │ momento.                                                   │
+├────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
+│ file:///home/alexandre/Documentos/github/prompt-registry/… │ [PASS] ## ✅ Status da Aplicação: Saudável                 │
+│                                                            │ - **Pods Analisados**: 4                                   │
+│                                                            │ - **Status**: Todos os pods estão operando normalmente     │
+│                                                            │ (`Running`), sem eventos de erro ou reinicializações       │
+│                                                            │ anômalas.                                                  │
+│                                                            │ - **Ação Recomendada**: Nenhuma ação necessária no         │
+│                                                            │ momento.                                                   │
+└────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────┘
+✓ Eval complete (ID: eval-vrm-2026-11-05T23:58:36)
+
+» View results: promptfoo view
+» Share with your team: https://promptfoo.app
+» Feedback: https://promptfoo.dev/feedback
+
+Total Tokens: 13.729
+  Provider: 13.729 (11.205 prompt, 2.524 completion)
+
+Repeat stability:
+  3 repeated groups; 0 unstable
+
+Results:
+  ✓ 6 passed (66.67%)
+  ✗ 3 failed (33.33%)
+  0 errors (0%)
+Duration: 11s (concurrency: 4)
+
+Writing output to Evidências/Checkpoint-08/diagnosticar-pods-kubernetes-v1.json
+

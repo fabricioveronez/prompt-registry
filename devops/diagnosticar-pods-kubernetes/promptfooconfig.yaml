@@ -1,0 +1,57 @@
+# Checkpoint 08: triagem-de-pods. Rodar a partir da raiz do repositório:
+# npx promptfoo@latest eval -c devops/diagnosticar-pods-kubernetes/promptfooconfig.yaml
+prompts:
+  - file://prompt-sem-frontmatter.cjs
+providers:
+  # gpt-4o-mini excede 5s na Entrada 2 (5,4 a 6,4s). Comparação na curadoria do CP08.
+  - openai:gpt-4.1-mini
+  # Segundo fornecedor do enunciado: descomente depois de incluir ANTHROPIC_API_KEY no .env.
+  # - anthropic:messages:claude-haiku-5-5
+evaluateOptions:
+  # A saída varia entre execuções, e o assert de latência exige chamadas reais, sem cache.
+  repeat: 3
+  cache: false
+defaultTest:
+  assert:
+    - type: latency
+      threshold: 5000
+    - type: cost
+      threshold: 0.01
+tests:
+  - description: Entrada 1 do CP01 (pod reiniciando por falta de memória)
+    vars:
+      snapshot: file://incidente/snapshot_teste1.txt
+    assert:
+      - type: contains
+        value: sentinel-api-7d9c8b6f4-h4m2t
+      - type: icontains-any
+        value: [OOMKilled, memória]
+  - description: Entrada 2 do CP01 (dois pods que não sobem)
+    vars:
+      snapshot: file://incidente/snapshot_teste2.txt
+    assert:
+      - type: contains
+        value: sentinel-api-7d9c8b6f4-zzp10
+      - type: contains
+        value: 2.9.2
+      - type: contains
+        value: ImagePullBackOff
+      - type: contains
+        value: sentinel-ingest-8f7a9c5b-4dkqm
+      - type: icontains
+        value: cpu
+      - type: icontains-any
+        value: [Insufficient, insuficiente, falta de]
+  - description: Entrada 3 do CP01 (tudo saudável)
+    vars:
+      snapshot: file://incidente/snapshot_teste3.txt
+    assert:
+      # O restart do worker há 3 dias não caracteriza falha: é o falso positivo que este caso procura.
+      - type: icontains
+        value: saudável
+      - type: not-icontains
+        value: Pods Com Problema
+      - type: not-icontains
+        value: Causa Raiz
+      - type: not-icontains
+        value: Relatório de Diagnóstico

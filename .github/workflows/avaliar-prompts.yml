@@ -1,0 +1,130 @@
+# Checkpoint 10: o playbook em produção contínua.
+# Roda as suítes promptfoo dos prompts a cada pull request e push na main e
+# barra a mudança quando algum prompt regride. Estratégia de gate e
+# justificativa em Entregas/checkpoint-10/README.md.
+name: Avaliar prompts
+
+on:
+  pull_request:
+    paths:
+      - 'devops/**'
+      - 'desenvolvimento/**'
+      - '.github/workflows/avaliar-prompts.yml'
+      - '.github/scripts/**'
+  push:
+    branches: [main]
+    paths:
+      - 'devops/**'
+      - 'desenvolvimento/**'
+      - '.github/workflows/avaliar-prompts.yml'
+      - '.github/scripts/**'
+  schedule:
+    # Toda segunda às 06:00 (BRT): suíte completa, para pegar regressão causada
+    # pelo fornecedor (modelo atualizado) sem nenhuma mudança no repositório.
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      suite_completa:
+        description: 'Rodar a suíte de todos os prompts'
+        type: boolean
+        default: true
+
+# Um push novo no mesmo PR cancela a execução anterior: não paga token por um commit já superado.
+concurrency:
+  group: avaliar-prompts-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cobertura:
+    name: Cobertura de testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Todo prompt tem promptfooconfig.yaml
+        run: bash .github/scripts/verificar-cobertura.sh
+
+  detectar:
+    name: Detectar prompts afetados
+    runs-on: ubuntu-latest
+    outputs:
+      prompts: ${{ steps.lista.outputs.prompts }}
+      total: ${{ steps.lista.outputs.total }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: lista
+        run: bash .github/scripts/prompts-afetados.sh
+        env:
+          SUITE_COMPLETA: ${{ github.event_name == 'schedule' || inputs.suite_completa == true }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+  avaliar:
+    name: Avaliar ${{ matrix.prompt }}
+    needs: [cobertura, detectar]
+    if: needs.detectar.outputs.total != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write # comentário com o resultado no PR
+    strategy:
+      fail-fast: false # uma regressão não esconde o resultado dos outros prompts
+      max-parallel: 4 # limita o paralelismo de chamadas ao fornecedor
+      matrix:
+        prompt: ${{ fromJSON(needs.detectar.outputs.prompts) }}
+    env:
+      # Secret do repositório. Nunca vai para o código nem para o log (o Actions mascara o valor).
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # PRs de fork não recebem secrets. Falhar aqui deixa claro o motivo,
+      # em vez de um erro de autenticação no meio da avaliação.
+      - name: Conferir chave do fornecedor
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "::error::Secret OPENAI_API_KEY ausente (PR de fork ou secret não cadastrado)."
+            exit 1
+          fi
+
+      - name: Rodar suíte promptfoo
+        uses: promptfoo/promptfoo-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config: ${{ matrix.prompt }}/promptfooconfig.yaml
+          # Os configs enviam o prompt por prompt-sem-frontmatter.cjs. O glob só
+          # identifica o prompt no comentário, sem substituir o prompt do config.
+          prompts: ${{ matrix.prompt }}/prompt.md
+          use-config-prompts: true
+          force-run: true # a seleção de prompts já foi feita no job detectar
+          promptfoo-version: 0.125.1 # mesma versão usada localmente
+          no-cache: true # latência e custo são medidos em chamadas reais
+          no-share: true # resultados não saem do GitHub
+          no-progress-bar: true
+          max-concurrency: 4
+
+  # Único check obrigatório na proteção da main. Junta o resultado da matriz,
+  # que tem nomes variáveis e pode ser pulada quando nenhum prompt mudou.
+  gate:
+    name: Gate de regressão
+    needs: [cobertura, detectar, avaliar]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decidir
+        run: |
+          echo "cobertura=${{ needs.cobertura.result }} detectar=${{ needs.detectar.result }} avaliar=${{ needs.avaliar.result }}"
+          [ "${{ needs.cobertura.result }}" = success ] || { echo "::error::Há prompt sem suíte promptfoo."; exit 1; }
+          [ "${{ needs.detectar.result }}" = success ] || { echo "::error::Falha ao detectar prompts afetados."; exit 1; }
+          case "${{ needs.avaliar.result }}" in
+            success) echo "Nenhum prompt regrediu." ;;
+            skipped) echo "Nenhum prompt alterado: nada a avaliar." ;;
+            *) echo "::error::Algum prompt regrediu. Veja os jobs 'Avaliar' e o comentário no PR."; exit 1 ;;
+          esac

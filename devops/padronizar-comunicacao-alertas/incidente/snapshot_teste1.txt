@@ -1,0 +1,26 @@
+
+        $ kubectl get pods -n sentinel-prod
+        NAME                            READY   STATUS             RESTARTS       AGE
+        sentinel-api-7d9c8b6f4-2xk9p    1/1     Running            0              6d
+        sentinel-api-7d9c8b6f4-h4m2t    0/1     CrashLoopBackOff   14 (90s ago)   42m
+        sentinel-worker-5b8f9c8d-jq7rs  1/1     Running            0              6d
+        sentinel-scheduler-6c4d7f-nn8vx 1/1     Running            0              6d
+
+        $ kubectl describe pod sentinel-api-7d9c8b6f4-h4m2t -n sentinel-prod
+            State:          Waiting
+              Reason:       CrashLoopBackOff
+            Last State:     Terminated
+              Reason:       OOMKilled
+              Exit Code:    137
+            Limits:         memory: 512Mi
+            Requests:       memory: 256Mi
+        Events:
+          Type     Reason   Age                 From     Message
+          ----     ------   ----                ----     -------
+          Warning  BackOff  2m (x18 over 40m)   kubelet  Back-off restarting failed container api
+
+        $ kubectl logs sentinel-api-7d9c8b6f4-h4m2t -n sentinel-prod --previous
+        2026-05-13 10:14:02 [INFO]  [api] startup complete, version 2.9.1
+        2026-05-13 10:14:48 [INFO]  [cache] loading 6h alert cache (heap 410Mi/512Mi)
+        2026-05-13 10:15:10 [WARN]  [runtime] high GC pressure, heap 498Mi/512Mi
+        2026-05-13 10:15:12 [FATAL] [runtime] out of memory, shutting down process

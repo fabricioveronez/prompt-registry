@@ -1,0 +1,106 @@
+# Checkpoint 08: networkpolicy-sentinel. Rodar a partir da raiz do repositório:
+# npx promptfoo@latest eval -c devops/corrigir-manifesto-network-policy/promptfooconfig.yaml
+prompts:
+  - file://prompt-sem-frontmatter.cjs
+providers:
+  # gpt-4o-mini e gpt-4.1-mini excedem 5s neste manifesto. Comparação na curadoria do CP08.
+  - openai:gpt-5.4-mini
+  # Segundo fornecedor do enunciado: descomente depois de incluir ANTHROPIC_API_KEY no .env.
+  # - anthropic:messages:claude-haiku-5-5
+evaluateOptions:
+  # A saída varia entre execuções, e o assert de latência exige chamadas reais, sem cache.
+  repeat: 3
+  cache: false
+tests:
+  - description: Manifesto permissivo do CP06
+    vars:
+      snapshot_manifesto: |
+        # manifesto barrado pela revisão de segurança — permissivo demais
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: sentinel-allow
+          namespace: sentinel-prod
+        spec:
+          podSelector: {}          # aplica a todos os pods do namespace
+          policyTypes:
+            - Ingress
+            - Egress
+          ingress:
+            - {}                   # libera QUALQUER origem
+          egress:
+            - {}                   # libera QUALQUER destino
+      snapshot_network_policy: |
+        NetworkPolicy para o namespace "sentinel-prod":
+        - pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de
+          eventos) e do gateway de API da plataforma
+        - pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),
+          Cerebro (busca, porta 9200) e DNS interno
+        - nada de "allow all" em ingress ou egress
+        - política default-deny explícita no namespace
+        - toda regra precisa de comentário dizendo qual fluxo legítimo ela libera
+      snapshot_servicos: |
+        Sentinel     → namespace sentinel-prod, pods com label app=sentinel
+        Relay        → namespace relay-prod,    pods com label app=relay
+        API gateway  → namespace edge,          pods com label app=api-gateway
+        Forge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)
+        Cerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)
+        DNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53
+    assert:
+      # Os asserts de estrutura olham o bloco YAML: o relatório em volta pode citar serviços e portas.
+      - type: javascript
+        metric: yaml_networkpolicy
+        value: |
+          const yaml = (output.match(/```ya?ml\r?\n([\s\S]*?)```/) || [, ''])[1];
+          return /^kind:\s*NetworkPolicy\s*$/m.test(yaml)
+            && /policyTypes:\s*\n\s*- Ingress\s*\n\s*- Egress/.test(yaml);
+      - type: javascript
+        metric: sem_allow_all
+        value: "!/-\\s*\\{\\s*\\}/.test(output)"
+      - type: javascript
+        metric: egress_forge_cerebro
+        value: |
+          // Só libera de verdade se namespace, label e porta estão na mesma regra,
+          // com "ports" como irmão de "to". Comentários não contam.
+          const yaml = (output.match(/```ya?ml\r?\n([\s\S]*?)```/) || [, ''])[1]
+            .replace(/^(\s*)-\s*(#.*)\r?\n\s+(from|to|ports)\s*:/gm, '$1- $3: $2')
+            .replace(/#.*$/gm, '');
+          const regras = [];
+          for (const linha of yaml.split(/\r?\n/)) {
+            const inicio = linha.match(/^(\s*)-\s*to\s*:/);
+            if (inicio) regras.push({ recuo: inicio[1].length, linhas: [] });
+            else if (regras.length) regras[regras.length - 1].linhas.push(linha);
+          }
+          const libera = (namespace, app, porta) => regras.some(({ recuo, linhas }) => {
+            const texto = linhas.join('\n');
+            return texto.includes(namespace)
+              && new RegExp(`app:\\s*${app}\\b`).test(texto)
+              && new RegExp(`^ {${recuo + 2}}ports:`, 'm').test(texto)
+              && new RegExp(`port:\\s*${porta}\\b`).test(texto);
+          });
+          return libera('forge-prod', 'forge', 5432) && libera('cerebro-prod', 'cerebro', 9200);
+      - type: javascript
+        metric: ingress_relay
+        value: |
+          const yaml = (output.match(/```ya?ml\r?\n([\s\S]*?)```/) || [, ''])[1].replace(/#.*$/gm, '');
+          // Olha documento por documento: o default-deny pode trazer um "ingress: []" antes da regra.
+          return yaml.split(/^---\s*$/m).some((documento) => {
+            const ingress = (documento.split(/^\s*ingress:/m)[1] || '').split(/^\s*egress:/m)[0];
+            return ingress.includes('relay-prod') && /app:\s*relay\b/.test(ingress);
+          });
+      - type: javascript
+        metric: regras_comentadas
+        value: |
+          // Cada item de ingress/egress precisa de "#" na própria linha ou na anterior.
+          const yaml = (output.match(/```ya?ml\r?\n([\s\S]*?)```/) || [, ''])[1]
+            .replace(/^(\s*)-\s*(#.*)\r?\n\s+(from|to|ports)\s*:/gm, '$1- $3: $2');
+          const linhas = yaml.split(/\r?\n/);
+          const regras = linhas
+            .map((linha, i) => ({ linha, anterior: linhas[i - 1] || '' }))
+            .filter(({ linha }) => /^\s*-\s*(from|to|ports)\s*:/.test(linha));
+          return regras.length >= 4
+            && regras.every(({ linha, anterior }) => linha.includes('#') || /^\s*#/.test(anterior));
+      - type: latency
+        threshold: 5000
+      - type: cost
+        threshold: 0.01

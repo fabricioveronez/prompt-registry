@@ -1,0 +1,36 @@
+# Calibração do juiz: o provider echo devolve cada saída fixa, e só o juiz chama o modelo.
+# Reprovar aqui pode ser o esperado. Quem decide o resultado é o comparar.cjs.
+prompts:
+  - '{{saida}}'
+providers:
+  - echo
+defaultTest:
+  vars:
+    snapshot_config: file://../incidente/snapshot_config.txt
+    snapshot_metricas: file://../incidente/snapshot_metricas.txt
+    snapshot_logs: file://../incidente/snapshot_logs.txt
+  options:
+    rubricPrompt: file://../rubrica-juiz.txt
+  assert:
+    - type: llm-rubric
+      metric: qualidade_rca
+      threshold: 0.75
+      provider: openai:gpt-5.6-luna
+      value: Rubrica de causa-raiz em rubrica-juiz.txt
+tests:
+  - description: real-cp03
+    vars: { saida: file://saidas/real-cp03.md }
+  - description: real-luna
+    vars: { saida: file://saidas/real-luna.md }
+  - description: sint-sintomas
+    vars: { saida: file://saidas/sint-sintomas.md }
+  - description: sint-c4-zero
+    vars: { saida: file://saidas/sint-c4-zero.md }
+  - description: sint-c3-zero
+    vars: { saida: file://saidas/sint-c3-zero.md }
+  - description: sint-fronteira-6
+    vars: { saida: file://saidas/sint-fronteira-6.md }
+  - description: sint-fronteira-5
+    vars: { saida: file://saidas/sint-fronteira-5.md }
+  - description: sint-excelente
+    vars: { saida: file://saidas/sint-excelente.md }

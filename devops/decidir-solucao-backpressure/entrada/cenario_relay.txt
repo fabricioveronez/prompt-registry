@@ -1,0 +1,16 @@
+O Relay é o barramento por onde todo o telemetry dos clientes passa antes de chegar no resto da plataforma. Quando um cliente grande dispara muito mais dado que o normal, o Relay recebe mais do que consegue entregar e a fila começa a acumular. Esse atraso vai empurrando o Sentinel junto, e o alerta que deveria sair na hora atrasa.
+
+O nome tecnico para o problema é backpressure. O problema é que não existe resposta única: dá pra resolver de várias formas, e cada uma tem um preço. Estes são os dados que o time juntou (o que se sabe do Relay hoje e as regras que a solução tem que respeitar):
+
+Relay (barramento de eventos):
+- throughput sustentado: 180k msgs/s
+- pico observado no incidente da semana passada: 320k msgs/s por 25min
+- retenção atual: 4h
+- consumidores: Forge (ingestão), Sentinel (alerting em tempo real)
+
+Restrições do time:
+- alerting do Sentinel não pode atrasar mais que 60s (SLA com cliente)
+- ingestão do Forge pode atrasar até 15min sem violar SLA
+- orçamento de infra do trimestre já está 8% acima do previsto
+- Steve Rogers lembra que o barramento antigo perdia mensagens sob pico,
+  e perda de telemetry é inaceitável para um produto de observabilidade

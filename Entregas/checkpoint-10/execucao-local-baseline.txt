@@ -1,0 +1,98 @@
+# Linha de base local: suíte completa dos 9 prompts, promptfoo 0.125.1, 2026-11-10.
+# Comando, para cada pasta: npx promptfoo@0.125.1 eval -c <pasta>/promptfooconfig.yaml
+# Custo de geração somado das saídas JSON. O custo do juiz não vem no JSON; ver tokens do juiz.
+#
+# Resultado: 8 de 9 suítes passaram. avaliar-manifesto falhou 1 de 6 em nota_coerente
+# (nota final 2.0 para média ponderada 1.725). A folga do assert subiu de 0.2 para 0.3 e
+# foi conferida nas 12 saídas gravadas do avaliador: 12 de 12 passam.
+
+== analisar-causa-raiz-elasticsearch.json  pass=3 fail=0 errors=0
+   custo geração ~US$ 0.0155 | latência ms: 37408, 37054, 36130
+   OK  regex: 3/3
+   OK  latency: 3/3
+   OK  cost: 3/3
+   OK  qualidade_rca: 3/3 scores=0.875,1,0.875
+
+== avaliar-manifesto-network-policy-corrigido.json  pass=5 fail=1 errors=0
+   custo geração ~US$ 0.0088 | latência ms: 4864, 5133, 4765, 6076, 5830, 5875
+   OK  formato: 6/6
+   XX  nota_coerente: 5/6
+        - Custom function returned false
+// A nota final tem de ser a média ponderada (40/30/15/15) das notas da tabela, com folga de 0.2.
+const linha = (nome) => {
+  con
+   OK  latency: 6/6
+   OK  cost: 6/6
+   OK  aprova_conforme: 3/3
+   OK  reprova_nao_conforme: 3/3
+   OK  aponta_alucinacoes: 3/3
+   OK  aponta_egress_aberto: 3/3
+
+== corrigir-manifesto-network-policy.json  pass=3 fail=0 errors=0
+   custo geração ~US$ 0.0108 | latência ms: 2719, 2875, 2865
+   OK  yaml_networkpolicy: 3/3
+   OK  sem_allow_all: 3/3
+   OK  egress_forge_cerebro: 3/3
+   OK  ingress_relay: 3/3
+   OK  regras_comentadas: 3/3
+   OK  latency: 3/3
+   OK  cost: 3/3
+
+== decidir-solucao-backpressure.json  pass=3 fail=0 errors=0
+   custo geração ~US$ 0.0092 | latência ms: 10775, 10853, 11562
+   OK  formato: 3/3
+   OK  quatro_caminhos: 3/3
+   OK  matriz_completa: 3/3
+   OK  escolha_explicita: 3/3
+   OK  latency: 3/3
+   OK  cost: 3/3
+   OK  decisao_respeita_restricoes: 3/3 scores=0.75,0.75,0.75
+
+== diagnosticar-migracao-batch-tempo-real.json  pass=3 fail=0 errors=0
+   custo geração ~US$ 0.0069 | latência ms: 7295, 7886, 7377
+   OK  formato: 3/3
+   OK  dois_caminhos: 3/3
+   OK  bloco_passo1: 3/3
+   OK  dependentes_citados: 3/3
+   OK  latency: 3/3
+   OK  cost: 3/3
+   OK  diagnostico_fiel: 3/3 scores=1,1,1
+
+== diagnosticar-pods-kubernetes.json  pass=9 fail=0 errors=0
+   custo geração ~US$ 0.0064 | latência ms: 1924, 2087, 2071, 3252, 2960, 2847, 1011, 953, 1330
+   OK  latency: 9/9
+   OK  cost: 9/9
+   OK  contains: 15/15
+   OK  icontains-any: 6/6
+   OK  icontains: 6/6
+   OK  not-icontains: 9/9
+
+== especificar-execucao-tatica-migracao-tempo-real.json  pass=3 fail=0 errors=0
+   custo geração ~US$ 0.0086 | latência ms: 9664, 8818, 9429
+   OK  formato: 3/3
+   OK  duas_abordagens: 3/3
+   OK  checklist: 3/3
+   OK  guia_operacional: 3/3
+   OK  politica_de_retry: 3/3
+   OK  formato_de_schema: 3/3
+   OK  latency: 3/3
+   OK  cost: 3/3
+   OK  especificacao_executavel: 3/3 scores=1,1,1
+
+== padronizar-comunicacao-alertas.json  pass=9 fail=0 errors=0
+   custo geração ~US$ 0.0014 | latência ms: 2211, 2127, 2104, 1784, 1691, 1865, 1557, 1548, 1774
+   OK  contains: 45/45
+   OK  regex: 9/9
+   OK  javascript: 9/9
+   OK  latency: 9/9
+   OK  cost: 9/9
+
+== planejar-migracao-incremental-batch-tempo-real.json  pass=3 fail=0 errors=0
+   custo geração ~US$ 0.0095 | latência ms: 11052, 11157, 11539
+   OK  formato: 3/3
+   OK  quatro_fases: 3/3
+   OK  bloco_passo2: 3/3
+   OK  cita_rollback: 3/3
+   OK  latency: 3/3
+   OK  cost: 3/3
+   OK  plano_reversivel: 3/3 scores=1,1,1

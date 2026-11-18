@@ -1,0 +1,73 @@
+# Comando: npx promptfoo@latest eval -c devops/corrigir-manifesto-network-policy/promptfooconfig.yaml
+
+Cache is disabled.
+Starting evaluation eval-GsR-2026-11-06T00:10:30
+Running 3 test cases (up to 4 at a time)...
+
+┌──────────────────────────────┬──────────────────────────────┬──────────────────────────────┬──────────────────────────────┐
+│ snapshot_manifesto           │ snapshot_network_policy      │ snapshot_servicos            │ [openai:gpt-5.4-mini]        │
+│                              │                              │                              │ devops/corrigir-manifesto-n… │
+├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+│ # manifesto barrado pela     │ NetworkPolicy para o         │ Sentinel     → namespace     │ [PASS] # Relatório de        │
+│ revisão de segurança —       │ namespace "sentinel-prod":   │ sentinel-prod, pods com      │ Conformidade e Manifesto     │
+│ permissivo demais            │ - pods do Sentinel só        │ label app=sentinel           │ Corrigido                    │
+│ apiVersion:                  │ aceitam tráfego de entrada   │ Relay        → namespace     │ ## 1. Resumo das             │
+│ networking.k8s.io/v1         │ do Relay (consumo de         │ relay-prod,    pods com      │ Divergências Encontradas     │
+│ kind: NetworkPolicy          │   eventos) e do gateway de … │ label app=relay              │ - **Rótulos/Labels:** O      │
+│ metadata:                    │ da plataforma                │ API gateway  → namespace     │ manifesto original não       │
+│   name: sentinel-allow       │ - pods do Sentinel só fazem  │ edge,          pods com      │ restringia o tráfego aos     │
+│   namespace: sentinel-prod   │ saída para: Forge            │ label app=api-gateway        │ labels e namespaces oficiais │
+│ spec:                        │ (warehouse, porta 5432),     │ Forge        → namespace     │ dos serviços permitidos; o   │
+│   podSelector: {}          # │   Cerebro (bu...             │ forge-prod,    pod...        │ padrão exige uso             │
+│ aplica a todos os pods do    │                              │                              │ explícito...                 │
+│ namespa...                   │                              │                              │                              │
+├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+│ # manifesto barrado pela     │ NetworkPolicy para o         │ Sentinel     → namespace     │ [PASS] # Relatório de        │
+│ revisão de segurança —       │ namespace "sentinel-prod":   │ sentinel-prod, pods com      │ Conformidade e Manifesto     │
+│ permissivo demais            │ - pods do Sentinel só        │ label app=sentinel           │ Corrigido                    │
+│ apiVersion:                  │ aceitam tráfego de entrada   │ Relay        → namespace     │ ## 1. Resumo das             │
+│ networking.k8s.io/v1         │ do Relay (consumo de         │ relay-prod,    pods com      │ Divergências Encontradas     │
+│ kind: NetworkPolicy          │   eventos) e do gateway de … │ label app=relay              │ - **Rótulos/Labels:** O      │
+│ metadata:                    │ da plataforma                │ API gateway  → namespace     │ manifesto original não       │
+│   name: sentinel-allow       │ - pods do Sentinel só fazem  │ edge,          pods com      │ restringia fluxos a nenhum   │
+│   namespace: sentinel-prod   │ saída para: Forge            │ label app=api-gateway        │ `app`/namespace permitido;   │
+│ spec:                        │ (warehouse, porta 5432),     │ Forge        → namespace     │ foi necessário alinhar os    │
+│   podSelector: {}          # │   Cerebro (bu...             │ forge-prod,    pod...        │ seletores aos serviços       │
+│ aplica a todos os pods do    │                              │                              │ ofic...                      │
+│ namespa...                   │                              │                              │                              │
+├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
+│ # manifesto barrado pela     │ NetworkPolicy para o         │ Sentinel     → namespace     │ [PASS] # Relatório de        │
+│ revisão de segurança —       │ namespace "sentinel-prod":   │ sentinel-prod, pods com      │ Conformidade e Manifesto     │
+│ permissivo demais            │ - pods do Sentinel só        │ label app=sentinel           │ Corrigido                    │
+│ apiVersion:                  │ aceitam tráfego de entrada   │ Relay        → namespace     │ ## 1. Resumo das             │
+│ networking.k8s.io/v1         │ do Relay (consumo de         │ relay-prod,    pods com      │ Divergências Encontradas     │
+│ kind: NetworkPolicy          │   eventos) e do gateway de … │ label app=relay              │ - **Rótulos/Labels:** O      │
+│ metadata:                    │ da plataforma                │ API gateway  → namespace     │ manifesto original não       │
+│   name: sentinel-allow       │ - pods do Sentinel só fazem  │ edge,          pods com      │ restringia tráfego por       │
+│   namespace: sentinel-prod   │ saída para: Forge            │ label app=api-gateway        │ labels válidos dos serviços  │
+│ spec:                        │ (warehouse, porta 5432),     │ Forge        → namespace     │ permitidos e não separava    │
+│   podSelector: {}          # │   Cerebro (bu...             │ forge-prod,    pod...        │ corretamente os              │
+│ aplica a todos os pods do    │                              │                              │ destinos/orige...            │
+│ namespa...                   │                              │                              │                              │
+└──────────────────────────────┴──────────────────────────────┴──────────────────────────────┴──────────────────────────────┘
+✓ Eval complete (ID: eval-GsR-2026-11-06T00:10:30)
+
+» View results: promptfoo view
+» Share with your team: https://promptfoo.app
+» Feedback: https://promptfoo.dev/feedback
+
+Total Tokens: 5.810
+  Provider: 5.810 (3.732 prompt, 2.078 completion)
+
+Repeat stability:
+  1 repeated group; 0 unstable
+
+Results:
+  ✓ 3 passed (100%)
+  0 failed (0%)
+  0 errors (0%)
+Duration: 3s (concurrency: 4)
+
+Writing output to Evidências/Checkpoint-08/corrigir-manifesto-network-policy-v5.json
+
+# exit code: 0

@@ -1,0 +1,10 @@
+# Amostras de estabilidade com os prompts e modelos finais. Sem cache.
+# Manifesto: --repeat 20. Pods: --repeat 10 (3 entradas).
+
+manifesto, gpt-5.4-mini            20/20  latência   2.5-  2.8s  custo máx US$ 0.00363  falhas: -
+pods, gpt-4.1-mini                 30/30  latência   0.9-  3.9s  custo máx US$ 0.00080  falhas: -
+
+# Validação estrutural com PyYAML, fora do promptfoo: 23 manifestos (v5 + amostra)
+YAML válido: 23/23
+5 fluxos com namespace, label, protocolo e porta exatos: 23/23
+default-deny com podSelector vazio: 23/23

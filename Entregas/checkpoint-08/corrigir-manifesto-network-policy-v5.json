@@ -1,0 +1,1147 @@
+{
+  "evalId": "eval-GsR-2026-11-06T00:10:30",
+  "results": {
+    "version": 3,
+    "timestamp": "2026-11-06T00:10:30.422Z",
+    "prompts": [
+      {
+        "raw": "({ vars }) => {\n  const prompt = fs\n    .readFileSync(path.join(__dirname, 'prompt.md'), 'utf8')\n    .replace(/^---\\r?\\n[\\s\\S]*?\\r?\\n---\\r?\\n+/, '');\n\n  return prompt.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (original, nome) => vars[nome] ?? original);\n}",
+        "label": "devops/corrigir-manifesto-network-policy/prompt-sem-frontmatter.cjs",
+        "config": {},
+        "id": "ffbc92bf44ec8d162d0b47aa9ac88ea0a4a1f3db9f12d0f4c60c265d6b7dbcd0",
+        "provider": "openai:gpt-5.4-mini",
+        "metrics": {
+          "score": 3,
+          "testPassCount": 3,
+          "testFailCount": 0,
+          "testErrorCount": 0,
+          "testCacheHitCount": 0,
+          "assertPassCount": 21,
+          "assertFailCount": 0,
+          "totalLatencyMs": 8740,
+          "tokenUsage": {
+            "prompt": 3732,
+            "completion": 2078,
+            "cached": 0,
+            "total": 5810,
+            "numRequests": 3,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 2048,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "namedScores": {
+            "yaml_networkpolicy": 3,
+            "sem_allow_all": 3,
+            "egress_forge_cerebro": 3,
+            "ingress_relay": 3,
+            "regras_comentadas": 3
+          },
+          "namedScoresCount": {
+            "yaml_networkpolicy": 3,
+            "sem_allow_all": 3,
+            "egress_forge_cerebro": 3,
+            "ingress_relay": 3,
+            "regras_comentadas": 3
+          },
+          "namedScoreWeights": {
+            "yaml_networkpolicy": 3,
+            "sem_allow_all": 3,
+            "egress_forge_cerebro": 3,
+            "ingress_relay": 3,
+            "regras_comentadas": 3
+          },
+          "cost": 0.0107676
+        }
+      }
+    ],
+    "results": [
+      {
+        "cost": 0.0041325,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "yaml_networkpolicy": 1,
+            "sem_allow_all": 1,
+            "egress_forge_cerebro": 1,
+            "ingress_relay": 1,
+            "regras_comentadas": 1
+          },
+          "namedScoreWeights": {
+            "yaml_networkpolicy": 1,
+            "sem_allow_all": 1,
+            "egress_forge_cerebro": 1,
+            "ingress_relay": 1,
+            "regras_comentadas": 1
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "yaml_networkpolicy",
+                "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1];\nreturn /^kind:\\s*NetworkPolicy\\s*$/m.test(yaml)\n  && /policyTypes:\\s*\\n\\s*- Ingress\\s*\\n\\s*- Egress/.test(yaml);\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "sem_allow_all",
+                "value": "!/-\\s*\\{\\s*\\}/.test(output)"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "egress_forge_cerebro",
+                "value": "// Só libera de verdade se namespace, label e porta estão na mesma regra,\n// com \"ports\" como irmão de \"to\". Comentários não contam.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2')\n  .replace(/#.*$/gm, '');\nconst regras = [];\nfor (const linha of yaml.split(/\\r?\\n/)) {\n  const inicio = linha.match(/^(\\s*)-\\s*to\\s*:/);\n  if (inicio) regras.push({ recuo: inicio[1].length, linhas: [] });\n  else if (regras.length) regras[regras.length - 1].linhas.push(linha);\n}\nconst libera = (namespace, app, porta) => regras.some(({ recuo, linhas }) => {\n  const texto = linhas.join('\\n');\n  return texto.includes(namespace)\n    && new RegExp(`app:\\\\s*${app}\\\\b`).test(texto)\n    && new RegExp(`^ {${recuo + 2}}ports:`, 'm').test(texto)\n    && new RegExp(`port:\\\\s*${porta}\\\\b`).test(texto);\n});\nreturn libera('forge-prod', 'forge', 5432) && libera('cerebro-prod', 'cerebro', 9200);\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "ingress_relay",
+                "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1].replace(/#.*$/gm, '');\n// Olha documento por documento: o default-deny pode trazer um \"ingress: []\" antes da regra.\nreturn yaml.split(/^---\\s*$/m).some((documento) => {\n  const ingress = (documento.split(/^\\s*ingress:/m)[1] || '').split(/^\\s*egress:/m)[0];\n  return ingress.includes('relay-prod') && /app:\\s*relay\\b/.test(ingress);\n});\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "regras_comentadas",
+                "value": "// Cada item de ingress/egress precisa de \"#\" na própria linha ou na anterior.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2');\nconst linhas = yaml.split(/\\r?\\n/);\nconst regras = linhas\n  .map((linha, i) => ({ linha, anterior: linhas[i - 1] || '' }))\n  .filter(({ linha }) => /^\\s*-\\s*(from|to|ports)\\s*:/.test(linha));\nreturn regras.length >= 4\n  && regras.every(({ linha, anterior }) => linha.includes('#') || /^\\s*#/.test(anterior));\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "ecc63acc-23f1-4524-9729-267f0fb3f3c2",
+        "latencyMs": 2758,
+        "namedScores": {
+          "yaml_networkpolicy": 1,
+          "sem_allow_all": 1,
+          "egress_forge_cerebro": 1,
+          "ingress_relay": 1,
+          "regras_comentadas": 1
+        },
+        "prompt": {
+          "raw": "# CONTEXT (Contexto)\nVocê é um Engenheiro de DevSecOps especialista em segurança de redes no Kubernetes (CNI, NetworkPolicies, Service Mesh).\nVocê recebeu três artefatos de entrada:\n1. O manifesto Kubernetes a ser revisado;\n2. O padrão oficial de NetworkPolicy a ser seguido;\n3. A lista oficial de nomes de serviços e rótulos (labels) permitidos no cluster.\n\n# OBJECTIVE (Objetivo)\nAnalisar o manifesto fornecido no `<snapshot_manifesto>`, compará-lo rigorosamente com o padrão em `<snapshot_network_policy>` e garantir alinhamento com a relação de serviços em `<snapshot_servicos>`.\nO resultado final deve ser o **manifesto Kubernetes corrigido/melhorado**.\n\n# CRITICAL CONSTRAINTS (Restrições Críticas)\n- **REGRA ZERO DE SEGURANÇA DE DADOS:** É ESTRITAMENTE PROIBIDO inventar, inferir ou supor nomes de serviços, namespaces, portas ou labels que não estejam explicitamente declarados nos snapshots.\n- Utilize APENAS os rótulos (`labels`), seletor de Pods (`podSelector`), seletores de Namespace (`namespaceSelector`) e nomes de serviços fornecidos nos artefatos.\n- Se houver divergência entre o manifesto e o padrão, ajuste o manifesto para cumprir o padrão sem criar chaves fictícias.\n- Crie um item próprio de `ingress` ou `egress` para cada fluxo liberado, seguindo o molde abaixo. Em `ingress`, use `from` no lugar de `to` e inclua `ports` apenas se os snapshots declararem a porta.\n- `ports` fica no mesmo nível de `from` ou `to`, nunca dentro do seletor.\n- Selecione o namespace pelo nome declarado nos snapshots, usando `matchLabels` com a chave `kubernetes.io/metadata.name`. Não use o label do pod como label do namespace.\n- Coloque o comentário `# Fluxo: ...` na linha imediatamente anterior a cada `- from:` ou `- to:`.\n- Para DNS na porta 53, libere os protocolos UDP e TCP no mesmo item.\n- Se o padrão exigir default-deny, entregue essa política como um documento próprio no mesmo bloco YAML, separado por `---`, com `podSelector: {}` para cobrir o namespace inteiro.\n- Não transcreva trechos do manifesto original no relatório. Descreva as divergências em texto.\n\nMolde de cada fluxo:\n\n```yaml\n# Fluxo: <origem> -> <destino>\n- to:\n    - namespaceSelector:\n        matchLabels:\n          kubernetes.io/metadata.name: <namespace>\n      podSelector:\n        matchLabels:\n          <chave-do-label>: <valor-do-label>\n  ports:\n    - protocol: TCP\n      port: <porta>\n```\n\n# STYLE (Estilo)\nEntrega técnica limpa, focada em Infraestrutura como Código (IaC) pronta para aplicação via `kubectl apply`.\n\n# TONE (Tom)\nPrescritivo, técnico e focado em conformidade e segurança de rede.\n\n# AUDIENCE (Audiência)\nEngenheiros DevOps, SREs e Desenvolvedores Cloud Native.\n\n# INPUT DATA (Entradas)\n\n<snapshot_manifesto>\n# manifesto barrado pela revisão de segurança — permissivo demais\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector: {}          # aplica a todos os pods do namespace\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    - {}                   # libera QUALQUER origem\n  egress:\n    - {}                   # libera QUALQUER destino\n\n</snapshot_manifesto>\n\n<snapshot_network_policy>\nNetworkPolicy para o namespace \"sentinel-prod\":\n- pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de\n  eventos) e do gateway de API da plataforma\n- pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),\n  Cerebro (busca, porta 9200) e DNS interno\n- nada de \"allow all\" em ingress ou egress\n- política default-deny explícita no namespace\n- toda regra precisa de comentário dizendo qual fluxo legítimo ela libera\n\n</snapshot_network_policy>\n\n<snapshot_servicos>\nSentinel     → namespace sentinel-prod, pods com label app=sentinel\nRelay        → namespace relay-prod,    pods com label app=relay\nAPI gateway  → namespace edge,          pods com label app=api-gateway\nForge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)\nCerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)\nDNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53\n\n</snapshot_servicos>\n\n# RESPONSE FORMAT (Formato de Resposta)\nForneça a resposta estritamente no seguinte formato Markdown:\n\n# Relatório de Conformidade e Manifesto Corrigido\n\n## 1. Resumo das Divergências Encontradas\n- **Rótulos/Labels:** [Uma frase com as divergências em relação aos serviços permitidos]\n- **Regras de Ingress/Egress:** [Uma frase com os pontos em desacordo com o padrão de NetworkPolicy]\n\n## 2. Manifesto Kubernetes Corrigido\n```yaml\n# Insira aqui o manifesto final ajustado e validado\n```\n\n## 3. Justificativa das Alterações\n- Em no máximo 3 itens de uma frase, explique as alterações com rastreabilidade aos dados do `<snapshot_servicos>` e `<snapshot_network_policy>`.\n\nMantenha as seções 1 e 3 curtas, porque o manifesto é a parte principal da entrega.\n",
+          "label": "devops/corrigir-manifesto-network-policy/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "ffbc92bf44ec8d162d0b47aa9ac88ea0a4a1f3db9f12d0f4c60c265d6b7dbcd0",
+        "promptIdx": 0,
+        "repeatGroupId": "test-0-vars-0",
+        "repeatIndex": 0,
+        "provider": {
+          "id": "openai:gpt-5.4-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "# Relatório de Conformidade e Manifesto Corrigido\n\n## 1. Resumo das Divergências Encontradas\n- **Rótulos/Labels:** O manifesto original não restringia o tráfego aos labels e namespaces oficiais dos serviços permitidos; o padrão exige uso explícito de `app=sentinel`, `app=relay`, `app=api-gateway`, `app=forge`, `app=cerebro` e `k8s-app=kube-dns` com os namespaces declarados.\n- **Regras de Ingress/Egress:** O manifesto estava permissivo demais com `allow all` em ingress e egress; o padrão exige default-deny explícito no namespace e somente os fluxos legítimos para Relay, API gateway, Forge, Cerebro e DNS interno.\n\n## 2. Manifesto Kubernetes Corrigido\n```yaml\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-default-deny\n  namespace: sentinel-prod\nspec:\n  podSelector: {}\n  policyTypes:\n    - Ingress\n    - Egress\n---\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector:\n    matchLabels:\n      app: sentinel\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    # Fluxo: Relay -> Sentinel\n    - from:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: relay-prod\n          podSelector:\n            matchLabels:\n              app: relay\n    # Fluxo: API gateway -> Sentinel\n    - from:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: edge\n          podSelector:\n            matchLabels:\n              app: api-gateway\n  egress:\n    # Fluxo: Sentinel -> Forge\n    - to:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: forge-prod\n          podSelector:\n            matchLabels:\n              app: forge\n      ports:\n        - protocol: TCP\n          port: 5432\n    # Fluxo: Sentinel -> Cerebro\n    - to:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: cerebro-prod\n          podSelector:\n            matchLabels:\n              app: cerebro\n      ports:\n        - protocol: TCP\n          port: 9200\n    # Fluxo: Sentinel -> DNS interno\n    - to:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: kube-system\n          podSelector:\n            matchLabels:\n              k8s-app: kube-dns\n      ports:\n        - protocol: UDP\n          port: 53\n        - protocol: TCP\n          port: 53\n```\n\n## 3. Justificativa das Alterações\n- Foi adicionada uma política `default-deny` explícita para o namespace `sentinel-prod`, conforme exigido pelo padrão.\n- O `podSelector` foi restringido a `app: sentinel`, alinhando a política aos pods oficiais do Sentinel informados em `<snapshot_servicos>`.\n- Os fluxos permitidos foram limitados a Relay, API gateway, Forge, Cerebro e DNS interno, com namespaces e portas exatamente conforme os snapshots.",
+          "tokenUsage": {
+            "prompt": 1244,
+            "completion": 711,
+            "cached": 0,
+            "total": 1955,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 2758,
+          "finishReason": "stop",
+          "cost": 0.0041325,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:10:33 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "2415",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Manifesto permissivo do CP06",
+          "vars": {
+            "snapshot_manifesto": "# manifesto barrado pela revisão de segurança — permissivo demais\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector: {}          # aplica a todos os pods do namespace\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    - {}                   # libera QUALQUER origem\n  egress:\n    - {}                   # libera QUALQUER destino\n",
+            "snapshot_network_policy": "NetworkPolicy para o namespace \"sentinel-prod\":\n- pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de\n  eventos) e do gateway de API da plataforma\n- pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),\n  Cerebro (busca, porta 9200) e DNS interno\n- nada de \"allow all\" em ingress ou egress\n- política default-deny explícita no namespace\n- toda regra precisa de comentário dizendo qual fluxo legítimo ela libera\n",
+            "snapshot_servicos": "Sentinel     → namespace sentinel-prod, pods com label app=sentinel\nRelay        → namespace relay-prod,    pods com label app=relay\nAPI gateway  → namespace edge,          pods com label app=api-gateway\nForge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)\nCerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)\nDNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53\n"
+          },
+          "assert": [
+            {
+              "type": "javascript",
+              "metric": "yaml_networkpolicy",
+              "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1];\nreturn /^kind:\\s*NetworkPolicy\\s*$/m.test(yaml)\n  && /policyTypes:\\s*\\n\\s*- Ingress\\s*\\n\\s*- Egress/.test(yaml);\n"
+            },
+            {
+              "type": "javascript",
+              "metric": "sem_allow_all",
+              "value": "!/-\\s*\\{\\s*\\}/.test(output)"
+            },
+            {
+              "type": "javascript",
+              "metric": "egress_forge_cerebro",
+              "value": "// Só libera de verdade se namespace, label e porta estão na mesma regra,\n// com \"ports\" como irmão de \"to\". Comentários não contam.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2')\n  .replace(/#.*$/gm, '');\nconst regras = [];\nfor (const linha of yaml.split(/\\r?\\n/)) {\n  const inicio = linha.match(/^(\\s*)-\\s*to\\s*:/);\n  if (inicio) regras.push({ recuo: inicio[1].length, linhas: [] });\n  else if (regras.length) regras[regras.length - 1].linhas.push(linha);\n}\nconst libera = (namespace, app, porta) => regras.some(({ recuo, linhas }) => {\n  const texto = linhas.join('\\n');\n  return texto.includes(namespace)\n    && new RegExp(`app:\\\\s*${app}\\\\b`).test(texto)\n    && new RegExp(`^ {${recuo + 2}}ports:`, 'm').test(texto)\n    && new RegExp(`port:\\\\s*${porta}\\\\b`).test(texto);\n});\nreturn libera('forge-prod', 'forge', 5432) && libera('cerebro-prod', 'cerebro', 9200);\n"
+            },
+            {
+              "type": "javascript",
+              "metric": "ingress_relay",
+              "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1].replace(/#.*$/gm, '');\n// Olha documento por documento: o default-deny pode trazer um \"ingress: []\" antes da regra.\nreturn yaml.split(/^---\\s*$/m).some((documento) => {\n  const ingress = (documento.split(/^\\s*ingress:/m)[1] || '').split(/^\\s*egress:/m)[0];\n  return ingress.includes('relay-prod') && /app:\\s*relay\\b/.test(ingress);\n});\n"
+            },
+            {
+              "type": "javascript",
+              "metric": "regras_comentadas",
+              "value": "// Cada item de ingress/egress precisa de \"#\" na própria linha ou na anterior.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2');\nconst linhas = yaml.split(/\\r?\\n/);\nconst regras = linhas\n  .map((linha, i) => ({ linha, anterior: linhas[i - 1] || '' }))\n  .filter(({ linha }) => /^\\s*-\\s*(from|to|ports)\\s*:/.test(linha));\nreturn regras.length >= 4\n  && regras.every(({ linha, anterior }) => linha.includes('#') || /^\\s*#/.test(anterior));\n"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 0,
+        "tokenUsage": {
+          "prompt": 1244,
+          "completion": 711,
+          "cached": 0,
+          "total": 1955,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_manifesto": "# manifesto barrado pela revisão de segurança — permissivo demais\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector: {}          # aplica a todos os pods do namespace\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    - {}                   # libera QUALQUER origem\n  egress:\n    - {}                   # libera QUALQUER destino\n",
+          "snapshot_network_policy": "NetworkPolicy para o namespace \"sentinel-prod\":\n- pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de\n  eventos) e do gateway de API da plataforma\n- pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),\n  Cerebro (busca, porta 9200) e DNS interno\n- nada de \"allow all\" em ingress ou egress\n- política default-deny explícita no namespace\n- toda regra precisa de comentário dizendo qual fluxo legítimo ela libera\n",
+          "snapshot_servicos": "Sentinel     → namespace sentinel-prod, pods com label app=sentinel\nRelay        → namespace relay-prod,    pods com label app=relay\nAPI gateway  → namespace edge,          pods com label app=api-gateway\nForge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)\nCerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)\nDNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:10:33 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "2415",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0033243,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "yaml_networkpolicy": 1,
+            "sem_allow_all": 1,
+            "egress_forge_cerebro": 1,
+            "ingress_relay": 1,
+            "regras_comentadas": 1
+          },
+          "namedScoreWeights": {
+            "yaml_networkpolicy": 1,
+            "sem_allow_all": 1,
+            "egress_forge_cerebro": 1,
+            "ingress_relay": 1,
+            "regras_comentadas": 1
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "yaml_networkpolicy",
+                "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1];\nreturn /^kind:\\s*NetworkPolicy\\s*$/m.test(yaml)\n  && /policyTypes:\\s*\\n\\s*- Ingress\\s*\\n\\s*- Egress/.test(yaml);\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "sem_allow_all",
+                "value": "!/-\\s*\\{\\s*\\}/.test(output)"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "egress_forge_cerebro",
+                "value": "// Só libera de verdade se namespace, label e porta estão na mesma regra,\n// com \"ports\" como irmão de \"to\". Comentários não contam.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2')\n  .replace(/#.*$/gm, '');\nconst regras = [];\nfor (const linha of yaml.split(/\\r?\\n/)) {\n  const inicio = linha.match(/^(\\s*)-\\s*to\\s*:/);\n  if (inicio) regras.push({ recuo: inicio[1].length, linhas: [] });\n  else if (regras.length) regras[regras.length - 1].linhas.push(linha);\n}\nconst libera = (namespace, app, porta) => regras.some(({ recuo, linhas }) => {\n  const texto = linhas.join('\\n');\n  return texto.includes(namespace)\n    && new RegExp(`app:\\\\s*${app}\\\\b`).test(texto)\n    && new RegExp(`^ {${recuo + 2}}ports:`, 'm').test(texto)\n    && new RegExp(`port:\\\\s*${porta}\\\\b`).test(texto);\n});\nreturn libera('forge-prod', 'forge', 5432) && libera('cerebro-prod', 'cerebro', 9200);\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "ingress_relay",
+                "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1].replace(/#.*$/gm, '');\n// Olha documento por documento: o default-deny pode trazer um \"ingress: []\" antes da regra.\nreturn yaml.split(/^---\\s*$/m).some((documento) => {\n  const ingress = (documento.split(/^\\s*ingress:/m)[1] || '').split(/^\\s*egress:/m)[0];\n  return ingress.includes('relay-prod') && /app:\\s*relay\\b/.test(ingress);\n});\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "regras_comentadas",
+                "value": "// Cada item de ingress/egress precisa de \"#\" na própria linha ou na anterior.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2');\nconst linhas = yaml.split(/\\r?\\n/);\nconst regras = linhas\n  .map((linha, i) => ({ linha, anterior: linhas[i - 1] || '' }))\n  .filter(({ linha }) => /^\\s*-\\s*(from|to|ports)\\s*:/.test(linha));\nreturn regras.length >= 4\n  && regras.every(({ linha, anterior }) => linha.includes('#') || /^\\s*#/.test(anterior));\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "7e282f17-7db7-41b7-8440-669a8613b52b",
+        "latencyMs": 3017,
+        "namedScores": {
+          "yaml_networkpolicy": 1,
+          "sem_allow_all": 1,
+          "egress_forge_cerebro": 1,
+          "ingress_relay": 1,
+          "regras_comentadas": 1
+        },
+        "prompt": {
+          "raw": "# CONTEXT (Contexto)\nVocê é um Engenheiro de DevSecOps especialista em segurança de redes no Kubernetes (CNI, NetworkPolicies, Service Mesh).\nVocê recebeu três artefatos de entrada:\n1. O manifesto Kubernetes a ser revisado;\n2. O padrão oficial de NetworkPolicy a ser seguido;\n3. A lista oficial de nomes de serviços e rótulos (labels) permitidos no cluster.\n\n# OBJECTIVE (Objetivo)\nAnalisar o manifesto fornecido no `<snapshot_manifesto>`, compará-lo rigorosamente com o padrão em `<snapshot_network_policy>` e garantir alinhamento com a relação de serviços em `<snapshot_servicos>`.\nO resultado final deve ser o **manifesto Kubernetes corrigido/melhorado**.\n\n# CRITICAL CONSTRAINTS (Restrições Críticas)\n- **REGRA ZERO DE SEGURANÇA DE DADOS:** É ESTRITAMENTE PROIBIDO inventar, inferir ou supor nomes de serviços, namespaces, portas ou labels que não estejam explicitamente declarados nos snapshots.\n- Utilize APENAS os rótulos (`labels`), seletor de Pods (`podSelector`), seletores de Namespace (`namespaceSelector`) e nomes de serviços fornecidos nos artefatos.\n- Se houver divergência entre o manifesto e o padrão, ajuste o manifesto para cumprir o padrão sem criar chaves fictícias.\n- Crie um item próprio de `ingress` ou `egress` para cada fluxo liberado, seguindo o molde abaixo. Em `ingress`, use `from` no lugar de `to` e inclua `ports` apenas se os snapshots declararem a porta.\n- `ports` fica no mesmo nível de `from` ou `to`, nunca dentro do seletor.\n- Selecione o namespace pelo nome declarado nos snapshots, usando `matchLabels` com a chave `kubernetes.io/metadata.name`. Não use o label do pod como label do namespace.\n- Coloque o comentário `# Fluxo: ...` na linha imediatamente anterior a cada `- from:` ou `- to:`.\n- Para DNS na porta 53, libere os protocolos UDP e TCP no mesmo item.\n- Se o padrão exigir default-deny, entregue essa política como um documento próprio no mesmo bloco YAML, separado por `---`, com `podSelector: {}` para cobrir o namespace inteiro.\n- Não transcreva trechos do manifesto original no relatório. Descreva as divergências em texto.\n\nMolde de cada fluxo:\n\n```yaml\n# Fluxo: <origem> -> <destino>\n- to:\n    - namespaceSelector:\n        matchLabels:\n          kubernetes.io/metadata.name: <namespace>\n      podSelector:\n        matchLabels:\n          <chave-do-label>: <valor-do-label>\n  ports:\n    - protocol: TCP\n      port: <porta>\n```\n\n# STYLE (Estilo)\nEntrega técnica limpa, focada em Infraestrutura como Código (IaC) pronta para aplicação via `kubectl apply`.\n\n# TONE (Tom)\nPrescritivo, técnico e focado em conformidade e segurança de rede.\n\n# AUDIENCE (Audiência)\nEngenheiros DevOps, SREs e Desenvolvedores Cloud Native.\n\n# INPUT DATA (Entradas)\n\n<snapshot_manifesto>\n# manifesto barrado pela revisão de segurança — permissivo demais\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector: {}          # aplica a todos os pods do namespace\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    - {}                   # libera QUALQUER origem\n  egress:\n    - {}                   # libera QUALQUER destino\n\n</snapshot_manifesto>\n\n<snapshot_network_policy>\nNetworkPolicy para o namespace \"sentinel-prod\":\n- pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de\n  eventos) e do gateway de API da plataforma\n- pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),\n  Cerebro (busca, porta 9200) e DNS interno\n- nada de \"allow all\" em ingress ou egress\n- política default-deny explícita no namespace\n- toda regra precisa de comentário dizendo qual fluxo legítimo ela libera\n\n</snapshot_network_policy>\n\n<snapshot_servicos>\nSentinel     → namespace sentinel-prod, pods com label app=sentinel\nRelay        → namespace relay-prod,    pods com label app=relay\nAPI gateway  → namespace edge,          pods com label app=api-gateway\nForge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)\nCerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)\nDNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53\n\n</snapshot_servicos>\n\n# RESPONSE FORMAT (Formato de Resposta)\nForneça a resposta estritamente no seguinte formato Markdown:\n\n# Relatório de Conformidade e Manifesto Corrigido\n\n## 1. Resumo das Divergências Encontradas\n- **Rótulos/Labels:** [Uma frase com as divergências em relação aos serviços permitidos]\n- **Regras de Ingress/Egress:** [Uma frase com os pontos em desacordo com o padrão de NetworkPolicy]\n\n## 2. Manifesto Kubernetes Corrigido\n```yaml\n# Insira aqui o manifesto final ajustado e validado\n```\n\n## 3. Justificativa das Alterações\n- Em no máximo 3 itens de uma frase, explique as alterações com rastreabilidade aos dados do `<snapshot_servicos>` e `<snapshot_network_policy>`.\n\nMantenha as seções 1 e 3 curtas, porque o manifesto é a parte principal da entrega.\n",
+          "label": "devops/corrigir-manifesto-network-policy/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "ffbc92bf44ec8d162d0b47aa9ac88ea0a4a1f3db9f12d0f4c60c265d6b7dbcd0",
+        "promptIdx": 0,
+        "repeatGroupId": "test-0-vars-0",
+        "repeatIndex": 1,
+        "provider": {
+          "id": "openai:gpt-5.4-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "# Relatório de Conformidade e Manifesto Corrigido\n\n## 1. Resumo das Divergências Encontradas\n- **Rótulos/Labels:** O manifesto original não restringia fluxos a nenhum `app`/namespace permitido; foi necessário alinhar os seletores aos serviços oficialmente declarados para Sentinel, Relay, API gateway, Forge, Cerebro e DNS interno.\n- **Regras de Ingress/Egress:** O manifesto estava em modo `allow all` para entrada e saída, em desacordo com o padrão que exige `default-deny` explícito e libera apenas os fluxos legítimos descritos.\n\n## 2. Manifesto Kubernetes Corrigido\n```yaml\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-default-deny\n  namespace: sentinel-prod\nspec:\n  podSelector: {}\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress: []\n  egress: []\n---\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector:\n    matchLabels:\n      app: sentinel\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    # Fluxo: Relay -> Sentinel\n    - from:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: relay-prod\n          podSelector:\n            matchLabels:\n              app: relay\n    # Fluxo: API gateway -> Sentinel\n    - from:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: edge\n          podSelector:\n            matchLabels:\n              app: api-gateway\n  egress:\n    # Fluxo: Sentinel -> Forge\n    - to:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: forge-prod\n          podSelector:\n            matchLabels:\n              app: forge\n      ports:\n        - protocol: TCP\n          port: 5432\n    # Fluxo: Sentinel -> Cerebro\n    - to:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: cerebro-prod\n          podSelector:\n            matchLabels:\n              app: cerebro\n      ports:\n        - protocol: TCP\n          port: 9200\n    # Fluxo: Sentinel -> DNS interno\n    - to:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: kube-system\n          podSelector:\n            matchLabels:\n              k8s-app: kube-dns\n      ports:\n        - protocol: UDP\n          port: 53\n        - protocol: TCP\n          port: 53\n```\n\n## 3. Justificativa das Alterações\n- Foi incluída uma política `default-deny` explícita no namespace `sentinel-prod`, conforme exigido pelo padrão.\n- Os fluxos de entrada foram limitados ao Relay e ao API gateway, usando os namespaces e labels oficiais fornecidos.\n- Os fluxos de saída foram restritos a Forge `5432`, Cerebro `9200` e DNS interno `53` com UDP/TCP no mesmo item, exatamente como definido nos snapshots.",
+          "tokenUsage": {
+            "prompt": 1244,
+            "completion": 685,
+            "cached": 0,
+            "total": 1929,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 1024,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 3017,
+          "finishReason": "stop",
+          "cost": 0.0033243,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:10:33 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "2511",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Manifesto permissivo do CP06",
+          "vars": {
+            "snapshot_manifesto": "# manifesto barrado pela revisão de segurança — permissivo demais\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector: {}          # aplica a todos os pods do namespace\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    - {}                   # libera QUALQUER origem\n  egress:\n    - {}                   # libera QUALQUER destino\n",
+            "snapshot_network_policy": "NetworkPolicy para o namespace \"sentinel-prod\":\n- pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de\n  eventos) e do gateway de API da plataforma\n- pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),\n  Cerebro (busca, porta 9200) e DNS interno\n- nada de \"allow all\" em ingress ou egress\n- política default-deny explícita no namespace\n- toda regra precisa de comentário dizendo qual fluxo legítimo ela libera\n",
+            "snapshot_servicos": "Sentinel     → namespace sentinel-prod, pods com label app=sentinel\nRelay        → namespace relay-prod,    pods com label app=relay\nAPI gateway  → namespace edge,          pods com label app=api-gateway\nForge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)\nCerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)\nDNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53\n"
+          },
+          "assert": [
+            {
+              "type": "javascript",
+              "metric": "yaml_networkpolicy",
+              "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1];\nreturn /^kind:\\s*NetworkPolicy\\s*$/m.test(yaml)\n  && /policyTypes:\\s*\\n\\s*- Ingress\\s*\\n\\s*- Egress/.test(yaml);\n"
+            },
+            {
+              "type": "javascript",
+              "metric": "sem_allow_all",
+              "value": "!/-\\s*\\{\\s*\\}/.test(output)"
+            },
+            {
+              "type": "javascript",
+              "metric": "egress_forge_cerebro",
+              "value": "// Só libera de verdade se namespace, label e porta estão na mesma regra,\n// com \"ports\" como irmão de \"to\". Comentários não contam.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2')\n  .replace(/#.*$/gm, '');\nconst regras = [];\nfor (const linha of yaml.split(/\\r?\\n/)) {\n  const inicio = linha.match(/^(\\s*)-\\s*to\\s*:/);\n  if (inicio) regras.push({ recuo: inicio[1].length, linhas: [] });\n  else if (regras.length) regras[regras.length - 1].linhas.push(linha);\n}\nconst libera = (namespace, app, porta) => regras.some(({ recuo, linhas }) => {\n  const texto = linhas.join('\\n');\n  return texto.includes(namespace)\n    && new RegExp(`app:\\\\s*${app}\\\\b`).test(texto)\n    && new RegExp(`^ {${recuo + 2}}ports:`, 'm').test(texto)\n    && new RegExp(`port:\\\\s*${porta}\\\\b`).test(texto);\n});\nreturn libera('forge-prod', 'forge', 5432) && libera('cerebro-prod', 'cerebro', 9200);\n"
+            },
+            {
+              "type": "javascript",
+              "metric": "ingress_relay",
+              "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1].replace(/#.*$/gm, '');\n// Olha documento por documento: o default-deny pode trazer um \"ingress: []\" antes da regra.\nreturn yaml.split(/^---\\s*$/m).some((documento) => {\n  const ingress = (documento.split(/^\\s*ingress:/m)[1] || '').split(/^\\s*egress:/m)[0];\n  return ingress.includes('relay-prod') && /app:\\s*relay\\b/.test(ingress);\n});\n"
+            },
+            {
+              "type": "javascript",
+              "metric": "regras_comentadas",
+              "value": "// Cada item de ingress/egress precisa de \"#\" na própria linha ou na anterior.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2');\nconst linhas = yaml.split(/\\r?\\n/);\nconst regras = linhas\n  .map((linha, i) => ({ linha, anterior: linhas[i - 1] || '' }))\n  .filter(({ linha }) => /^\\s*-\\s*(from|to|ports)\\s*:/.test(linha));\nreturn regras.length >= 4\n  && regras.every(({ linha, anterior }) => linha.includes('#') || /^\\s*#/.test(anterior));\n"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 1,
+        "tokenUsage": {
+          "prompt": 1244,
+          "completion": 685,
+          "cached": 0,
+          "total": 1929,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 1024,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_manifesto": "# manifesto barrado pela revisão de segurança — permissivo demais\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector: {}          # aplica a todos os pods do namespace\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    - {}                   # libera QUALQUER origem\n  egress:\n    - {}                   # libera QUALQUER destino\n",
+          "snapshot_network_policy": "NetworkPolicy para o namespace \"sentinel-prod\":\n- pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de\n  eventos) e do gateway de API da plataforma\n- pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),\n  Cerebro (busca, porta 9200) e DNS interno\n- nada de \"allow all\" em ingress ou egress\n- política default-deny explícita no namespace\n- toda regra precisa de comentário dizendo qual fluxo legítimo ela libera\n",
+          "snapshot_servicos": "Sentinel     → namespace sentinel-prod, pods com label app=sentinel\nRelay        → namespace relay-prod,    pods com label app=relay\nAPI gateway  → namespace edge,          pods com label app=api-gateway\nForge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)\nCerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)\nDNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:10:33 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "2511",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0033108,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {
+            "yaml_networkpolicy": 1,
+            "sem_allow_all": 1,
+            "egress_forge_cerebro": 1,
+            "ingress_relay": 1,
+            "regras_comentadas": 1
+          },
+          "namedScoreWeights": {
+            "yaml_networkpolicy": 1,
+            "sem_allow_all": 1,
+            "egress_forge_cerebro": 1,
+            "ingress_relay": 1,
+            "regras_comentadas": 1
+          },
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "yaml_networkpolicy",
+                "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1];\nreturn /^kind:\\s*NetworkPolicy\\s*$/m.test(yaml)\n  && /policyTypes:\\s*\\n\\s*- Ingress\\s*\\n\\s*- Egress/.test(yaml);\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "sem_allow_all",
+                "value": "!/-\\s*\\{\\s*\\}/.test(output)"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "egress_forge_cerebro",
+                "value": "// Só libera de verdade se namespace, label e porta estão na mesma regra,\n// com \"ports\" como irmão de \"to\". Comentários não contam.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2')\n  .replace(/#.*$/gm, '');\nconst regras = [];\nfor (const linha of yaml.split(/\\r?\\n/)) {\n  const inicio = linha.match(/^(\\s*)-\\s*to\\s*:/);\n  if (inicio) regras.push({ recuo: inicio[1].length, linhas: [] });\n  else if (regras.length) regras[regras.length - 1].linhas.push(linha);\n}\nconst libera = (namespace, app, porta) => regras.some(({ recuo, linhas }) => {\n  const texto = linhas.join('\\n');\n  return texto.includes(namespace)\n    && new RegExp(`app:\\\\s*${app}\\\\b`).test(texto)\n    && new RegExp(`^ {${recuo + 2}}ports:`, 'm').test(texto)\n    && new RegExp(`port:\\\\s*${porta}\\\\b`).test(texto);\n});\nreturn libera('forge-prod', 'forge', 5432) && libera('cerebro-prod', 'cerebro', 9200);\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "ingress_relay",
+                "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1].replace(/#.*$/gm, '');\n// Olha documento por documento: o default-deny pode trazer um \"ingress: []\" antes da regra.\nreturn yaml.split(/^---\\s*$/m).some((documento) => {\n  const ingress = (documento.split(/^\\s*ingress:/m)[1] || '').split(/^\\s*egress:/m)[0];\n  return ingress.includes('relay-prod') && /app:\\s*relay\\b/.test(ingress);\n});\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "metric": "regras_comentadas",
+                "value": "// Cada item de ingress/egress precisa de \"#\" na própria linha ou na anterior.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2');\nconst linhas = yaml.split(/\\r?\\n/);\nconst regras = linhas\n  .map((linha, i) => ({ linha, anterior: linhas[i - 1] || '' }))\n  .filter(({ linha }) => /^\\s*-\\s*(from|to|ports)\\s*:/.test(linha));\nreturn regras.length >= 4\n  && regras.every(({ linha, anterior }) => linha.includes('#') || /^\\s*#/.test(anterior));\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            }
+          ]
+        },
+        "id": "65a4be57-dcb5-4040-9c36-0ca94f1f9522",
+        "latencyMs": 2965,
+        "namedScores": {
+          "yaml_networkpolicy": 1,
+          "sem_allow_all": 1,
+          "egress_forge_cerebro": 1,
+          "ingress_relay": 1,
+          "regras_comentadas": 1
+        },
+        "prompt": {
+          "raw": "# CONTEXT (Contexto)\nVocê é um Engenheiro de DevSecOps especialista em segurança de redes no Kubernetes (CNI, NetworkPolicies, Service Mesh).\nVocê recebeu três artefatos de entrada:\n1. O manifesto Kubernetes a ser revisado;\n2. O padrão oficial de NetworkPolicy a ser seguido;\n3. A lista oficial de nomes de serviços e rótulos (labels) permitidos no cluster.\n\n# OBJECTIVE (Objetivo)\nAnalisar o manifesto fornecido no `<snapshot_manifesto>`, compará-lo rigorosamente com o padrão em `<snapshot_network_policy>` e garantir alinhamento com a relação de serviços em `<snapshot_servicos>`.\nO resultado final deve ser o **manifesto Kubernetes corrigido/melhorado**.\n\n# CRITICAL CONSTRAINTS (Restrições Críticas)\n- **REGRA ZERO DE SEGURANÇA DE DADOS:** É ESTRITAMENTE PROIBIDO inventar, inferir ou supor nomes de serviços, namespaces, portas ou labels que não estejam explicitamente declarados nos snapshots.\n- Utilize APENAS os rótulos (`labels`), seletor de Pods (`podSelector`), seletores de Namespace (`namespaceSelector`) e nomes de serviços fornecidos nos artefatos.\n- Se houver divergência entre o manifesto e o padrão, ajuste o manifesto para cumprir o padrão sem criar chaves fictícias.\n- Crie um item próprio de `ingress` ou `egress` para cada fluxo liberado, seguindo o molde abaixo. Em `ingress`, use `from` no lugar de `to` e inclua `ports` apenas se os snapshots declararem a porta.\n- `ports` fica no mesmo nível de `from` ou `to`, nunca dentro do seletor.\n- Selecione o namespace pelo nome declarado nos snapshots, usando `matchLabels` com a chave `kubernetes.io/metadata.name`. Não use o label do pod como label do namespace.\n- Coloque o comentário `# Fluxo: ...` na linha imediatamente anterior a cada `- from:` ou `- to:`.\n- Para DNS na porta 53, libere os protocolos UDP e TCP no mesmo item.\n- Se o padrão exigir default-deny, entregue essa política como um documento próprio no mesmo bloco YAML, separado por `---`, com `podSelector: {}` para cobrir o namespace inteiro.\n- Não transcreva trechos do manifesto original no relatório. Descreva as divergências em texto.\n\nMolde de cada fluxo:\n\n```yaml\n# Fluxo: <origem> -> <destino>\n- to:\n    - namespaceSelector:\n        matchLabels:\n          kubernetes.io/metadata.name: <namespace>\n      podSelector:\n        matchLabels:\n          <chave-do-label>: <valor-do-label>\n  ports:\n    - protocol: TCP\n      port: <porta>\n```\n\n# STYLE (Estilo)\nEntrega técnica limpa, focada em Infraestrutura como Código (IaC) pronta para aplicação via `kubectl apply`.\n\n# TONE (Tom)\nPrescritivo, técnico e focado em conformidade e segurança de rede.\n\n# AUDIENCE (Audiência)\nEngenheiros DevOps, SREs e Desenvolvedores Cloud Native.\n\n# INPUT DATA (Entradas)\n\n<snapshot_manifesto>\n# manifesto barrado pela revisão de segurança — permissivo demais\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector: {}          # aplica a todos os pods do namespace\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    - {}                   # libera QUALQUER origem\n  egress:\n    - {}                   # libera QUALQUER destino\n\n</snapshot_manifesto>\n\n<snapshot_network_policy>\nNetworkPolicy para o namespace \"sentinel-prod\":\n- pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de\n  eventos) e do gateway de API da plataforma\n- pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),\n  Cerebro (busca, porta 9200) e DNS interno\n- nada de \"allow all\" em ingress ou egress\n- política default-deny explícita no namespace\n- toda regra precisa de comentário dizendo qual fluxo legítimo ela libera\n\n</snapshot_network_policy>\n\n<snapshot_servicos>\nSentinel     → namespace sentinel-prod, pods com label app=sentinel\nRelay        → namespace relay-prod,    pods com label app=relay\nAPI gateway  → namespace edge,          pods com label app=api-gateway\nForge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)\nCerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)\nDNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53\n\n</snapshot_servicos>\n\n# RESPONSE FORMAT (Formato de Resposta)\nForneça a resposta estritamente no seguinte formato Markdown:\n\n# Relatório de Conformidade e Manifesto Corrigido\n\n## 1. Resumo das Divergências Encontradas\n- **Rótulos/Labels:** [Uma frase com as divergências em relação aos serviços permitidos]\n- **Regras de Ingress/Egress:** [Uma frase com os pontos em desacordo com o padrão de NetworkPolicy]\n\n## 2. Manifesto Kubernetes Corrigido\n```yaml\n# Insira aqui o manifesto final ajustado e validado\n```\n\n## 3. Justificativa das Alterações\n- Em no máximo 3 itens de uma frase, explique as alterações com rastreabilidade aos dados do `<snapshot_servicos>` e `<snapshot_network_policy>`.\n\nMantenha as seções 1 e 3 curtas, porque o manifesto é a parte principal da entrega.\n",
+          "label": "devops/corrigir-manifesto-network-policy/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "ffbc92bf44ec8d162d0b47aa9ac88ea0a4a1f3db9f12d0f4c60c265d6b7dbcd0",
+        "promptIdx": 0,
+        "repeatGroupId": "test-0-vars-0",
+        "repeatIndex": 2,
+        "provider": {
+          "id": "openai:gpt-5.4-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "# Relatório de Conformidade e Manifesto Corrigido\n\n## 1. Resumo das Divergências Encontradas\n- **Rótulos/Labels:** O manifesto original não restringia tráfego por labels válidos dos serviços permitidos e não separava corretamente os destinos/origens conforme os rótulos oficiais declarados.\n- **Regras de Ingress/Egress:** Havia regras totalmente permissivas (`allow all`) em ingress e egress, em desacordo com o padrão, que exige default-deny explícito e liberações específicas apenas para Relay, API gateway, Forge, Cerebro e DNS interno.\n\n## 2. Manifesto Kubernetes Corrigido\n```yaml\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-default-deny\n  namespace: sentinel-prod\nspec:\n  podSelector: {}\n  policyTypes:\n    - Ingress\n    - Egress\n---\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector:\n    matchLabels:\n      app: sentinel\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    # Fluxo: Relay -> Sentinel\n    - from:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: relay-prod\n          podSelector:\n            matchLabels:\n              app: relay\n    # Fluxo: API gateway -> Sentinel\n    - from:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: edge\n          podSelector:\n            matchLabels:\n              app: api-gateway\n  egress:\n    # Fluxo: Sentinel -> Forge\n    - to:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: forge-prod\n          podSelector:\n            matchLabels:\n              app: forge\n      ports:\n        - protocol: TCP\n          port: 5432\n    # Fluxo: Sentinel -> Cerebro\n    - to:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: cerebro-prod\n          podSelector:\n            matchLabels:\n              app: cerebro\n      ports:\n        - protocol: TCP\n          port: 9200\n    # Fluxo: Sentinel -> DNS interno\n    - to:\n        - namespaceSelector:\n            matchLabels:\n              kubernetes.io/metadata.name: kube-system\n          podSelector:\n            matchLabels:\n              k8s-app: kube-dns\n      ports:\n        - protocol: UDP\n          port: 53\n        - protocol: TCP\n          port: 53\n```\n\n## 3. Justificativa das Alterações\n- Foi criado um **default-deny explícito** para o namespace `sentinel-prod`, conforme exigido pelo padrão.\n- As liberações de entrada foram limitadas aos fluxos oficiais **Relay -> Sentinel** e **API gateway -> Sentinel**, usando os namespaces e labels fornecidos.\n- As liberações de saída foram restringidas a **Forge:5432**, **Cerebro:9200** e **DNS interno:53 UDP/TCP**, sem uso de permissões amplas.",
+          "tokenUsage": {
+            "prompt": 1244,
+            "completion": 682,
+            "cached": 0,
+            "total": 1926,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 1024,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 2965,
+          "finishReason": "stop",
+          "cost": 0.0033108,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:10:33 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "2459",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Manifesto permissivo do CP06",
+          "vars": {
+            "snapshot_manifesto": "# manifesto barrado pela revisão de segurança — permissivo demais\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector: {}          # aplica a todos os pods do namespace\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    - {}                   # libera QUALQUER origem\n  egress:\n    - {}                   # libera QUALQUER destino\n",
+            "snapshot_network_policy": "NetworkPolicy para o namespace \"sentinel-prod\":\n- pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de\n  eventos) e do gateway de API da plataforma\n- pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),\n  Cerebro (busca, porta 9200) e DNS interno\n- nada de \"allow all\" em ingress ou egress\n- política default-deny explícita no namespace\n- toda regra precisa de comentário dizendo qual fluxo legítimo ela libera\n",
+            "snapshot_servicos": "Sentinel     → namespace sentinel-prod, pods com label app=sentinel\nRelay        → namespace relay-prod,    pods com label app=relay\nAPI gateway  → namespace edge,          pods com label app=api-gateway\nForge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)\nCerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)\nDNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53\n"
+          },
+          "assert": [
+            {
+              "type": "javascript",
+              "metric": "yaml_networkpolicy",
+              "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1];\nreturn /^kind:\\s*NetworkPolicy\\s*$/m.test(yaml)\n  && /policyTypes:\\s*\\n\\s*- Ingress\\s*\\n\\s*- Egress/.test(yaml);\n"
+            },
+            {
+              "type": "javascript",
+              "metric": "sem_allow_all",
+              "value": "!/-\\s*\\{\\s*\\}/.test(output)"
+            },
+            {
+              "type": "javascript",
+              "metric": "egress_forge_cerebro",
+              "value": "// Só libera de verdade se namespace, label e porta estão na mesma regra,\n// com \"ports\" como irmão de \"to\". Comentários não contam.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2')\n  .replace(/#.*$/gm, '');\nconst regras = [];\nfor (const linha of yaml.split(/\\r?\\n/)) {\n  const inicio = linha.match(/^(\\s*)-\\s*to\\s*:/);\n  if (inicio) regras.push({ recuo: inicio[1].length, linhas: [] });\n  else if (regras.length) regras[regras.length - 1].linhas.push(linha);\n}\nconst libera = (namespace, app, porta) => regras.some(({ recuo, linhas }) => {\n  const texto = linhas.join('\\n');\n  return texto.includes(namespace)\n    && new RegExp(`app:\\\\s*${app}\\\\b`).test(texto)\n    && new RegExp(`^ {${recuo + 2}}ports:`, 'm').test(texto)\n    && new RegExp(`port:\\\\s*${porta}\\\\b`).test(texto);\n});\nreturn libera('forge-prod', 'forge', 5432) && libera('cerebro-prod', 'cerebro', 9200);\n"
+            },
+            {
+              "type": "javascript",
+              "metric": "ingress_relay",
+              "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1].replace(/#.*$/gm, '');\n// Olha documento por documento: o default-deny pode trazer um \"ingress: []\" antes da regra.\nreturn yaml.split(/^---\\s*$/m).some((documento) => {\n  const ingress = (documento.split(/^\\s*ingress:/m)[1] || '').split(/^\\s*egress:/m)[0];\n  return ingress.includes('relay-prod') && /app:\\s*relay\\b/.test(ingress);\n});\n"
+            },
+            {
+              "type": "javascript",
+              "metric": "regras_comentadas",
+              "value": "// Cada item de ingress/egress precisa de \"#\" na própria linha ou na anterior.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2');\nconst linhas = yaml.split(/\\r?\\n/);\nconst regras = linhas\n  .map((linha, i) => ({ linha, anterior: linhas[i - 1] || '' }))\n  .filter(({ linha }) => /^\\s*-\\s*(from|to|ports)\\s*:/.test(linha));\nreturn regras.length >= 4\n  && regras.every(({ linha, anterior }) => linha.includes('#') || /^\\s*#/.test(anterior));\n"
+            },
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 2,
+        "tokenUsage": {
+          "prompt": 1244,
+          "completion": 682,
+          "cached": 0,
+          "total": 1926,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 1024,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot_manifesto": "# manifesto barrado pela revisão de segurança — permissivo demais\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector: {}          # aplica a todos os pods do namespace\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    - {}                   # libera QUALQUER origem\n  egress:\n    - {}                   # libera QUALQUER destino\n",
+          "snapshot_network_policy": "NetworkPolicy para o namespace \"sentinel-prod\":\n- pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de\n  eventos) e do gateway de API da plataforma\n- pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),\n  Cerebro (busca, porta 9200) e DNS interno\n- nada de \"allow all\" em ingress ou egress\n- política default-deny explícita no namespace\n- toda regra precisa de comentário dizendo qual fluxo legítimo ela libera\n",
+          "snapshot_servicos": "Sentinel     → namespace sentinel-prod, pods com label app=sentinel\nRelay        → namespace relay-prod,    pods com label app=relay\nAPI gateway  → namespace edge,          pods com label app=api-gateway\nForge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)\nCerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)\nDNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:10:33 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "2459",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      }
+    ],
+    "stats": {
+      "successes": 3,
+      "failures": 0,
+      "errors": 0,
+      "tokenUsage": {
+        "prompt": 3732,
+        "completion": 2078,
+        "cached": 0,
+        "total": 5810,
+        "numRequests": 3,
+        "completionDetails": {
+          "reasoning": 0,
+          "acceptedPrediction": 0,
+          "rejectedPrediction": 0,
+          "cacheReadInputTokens": 2048,
+          "cacheCreationInputTokens": 0
+        },
+        "assertions": {
+          "total": 0,
+          "prompt": 0,
+          "completion": 0,
+          "cached": 0,
+          "numRequests": 0,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          }
+        }
+      },
+      "durationMs": 3052,
+      "evaluationDurationMs": 3052
+    },
+    "repeatStability": {
+      "totalGroups": 1,
+      "unstableGroups": 0,
+      "groupsWithErrors": 0,
+      "cachedResults": 0,
+      "groups": [
+        {
+          "repeatGroupId": "test-0-vars-0",
+          "promptIdx": 0,
+          "provider": {
+            "id": "openai:gpt-5.4-mini",
+            "label": ""
+          },
+          "description": "Manifesto permissivo do CP06",
+          "promptLabel": "devops/corrigir-manifesto-network-policy/prompt-sem-frontmatter.cjs",
+          "repetitions": 3,
+          "passed": 3,
+          "failed": 0,
+          "errors": 0,
+          "cached": 0,
+          "unstable": false,
+          "passRate": 1,
+          "passRateConfidenceInterval": {
+            "confidenceLevel": 0.95,
+            "lower": 0.43850296824495455,
+            "upper": 1
+          }
+        }
+      ]
+    }
+  },
+  "config": {
+    "tags": {},
+    "prompts": [
+      "file:///home/alexandre/Documentos/github/prompt-registry/devops/corrigir-manifesto-network-policy/prompt-sem-frontmatter.cjs"
+    ],
+    "providers": [
+      "openai:gpt-5.4-mini"
+    ],
+    "tests": [
+      {
+        "description": "Manifesto permissivo do CP06",
+        "vars": {
+          "snapshot_manifesto": "# manifesto barrado pela revisão de segurança — permissivo demais\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: sentinel-allow\n  namespace: sentinel-prod\nspec:\n  podSelector: {}          # aplica a todos os pods do namespace\n  policyTypes:\n    - Ingress\n    - Egress\n  ingress:\n    - {}                   # libera QUALQUER origem\n  egress:\n    - {}                   # libera QUALQUER destino\n",
+          "snapshot_network_policy": "NetworkPolicy para o namespace \"sentinel-prod\":\n- pods do Sentinel só aceitam tráfego de entrada do Relay (consumo de\n  eventos) e do gateway de API da plataforma\n- pods do Sentinel só fazem saída para: Forge (warehouse, porta 5432),\n  Cerebro (busca, porta 9200) e DNS interno\n- nada de \"allow all\" em ingress ou egress\n- política default-deny explícita no namespace\n- toda regra precisa de comentário dizendo qual fluxo legítimo ela libera\n",
+          "snapshot_servicos": "Sentinel     → namespace sentinel-prod, pods com label app=sentinel\nRelay        → namespace relay-prod,    pods com label app=relay\nAPI gateway  → namespace edge,          pods com label app=api-gateway\nForge        → namespace forge-prod,    pods com label app=forge,   porta 5432 (Postgres do warehouse)\nCerebro      → namespace cerebro-prod,  pods com label app=cerebro, porta 9200 (Elasticsearch)\nDNS interno  → namespace kube-system,   pods com label k8s-app=kube-dns, porta 53\n"
+        },
+        "assert": [
+          {
+            "type": "javascript",
+            "metric": "yaml_networkpolicy",
+            "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1];\nreturn /^kind:\\s*NetworkPolicy\\s*$/m.test(yaml)\n  && /policyTypes:\\s*\\n\\s*- Ingress\\s*\\n\\s*- Egress/.test(yaml);\n"
+          },
+          {
+            "type": "javascript",
+            "metric": "sem_allow_all",
+            "value": "!/-\\s*\\{\\s*\\}/.test(output)"
+          },
+          {
+            "type": "javascript",
+            "metric": "egress_forge_cerebro",
+            "value": "// Só libera de verdade se namespace, label e porta estão na mesma regra,\n// com \"ports\" como irmão de \"to\". Comentários não contam.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2')\n  .replace(/#.*$/gm, '');\nconst regras = [];\nfor (const linha of yaml.split(/\\r?\\n/)) {\n  const inicio = linha.match(/^(\\s*)-\\s*to\\s*:/);\n  if (inicio) regras.push({ recuo: inicio[1].length, linhas: [] });\n  else if (regras.length) regras[regras.length - 1].linhas.push(linha);\n}\nconst libera = (namespace, app, porta) => regras.some(({ recuo, linhas }) => {\n  const texto = linhas.join('\\n');\n  return texto.includes(namespace)\n    && new RegExp(`app:\\\\s*${app}\\\\b`).test(texto)\n    && new RegExp(`^ {${recuo + 2}}ports:`, 'm').test(texto)\n    && new RegExp(`port:\\\\s*${porta}\\\\b`).test(texto);\n});\nreturn libera('forge-prod', 'forge', 5432) && libera('cerebro-prod', 'cerebro', 9200);\n"
+          },
+          {
+            "type": "javascript",
+            "metric": "ingress_relay",
+            "value": "const yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1].replace(/#.*$/gm, '');\n// Olha documento por documento: o default-deny pode trazer um \"ingress: []\" antes da regra.\nreturn yaml.split(/^---\\s*$/m).some((documento) => {\n  const ingress = (documento.split(/^\\s*ingress:/m)[1] || '').split(/^\\s*egress:/m)[0];\n  return ingress.includes('relay-prod') && /app:\\s*relay\\b/.test(ingress);\n});\n"
+          },
+          {
+            "type": "javascript",
+            "metric": "regras_comentadas",
+            "value": "// Cada item de ingress/egress precisa de \"#\" na própria linha ou na anterior.\nconst yaml = (output.match(/```ya?ml\\r?\\n([\\s\\S]*?)```/) || [, ''])[1]\n  .replace(/^(\\s*)-\\s*(#.*)\\r?\\n\\s+(from|to|ports)\\s*:/gm, '$1- $3: $2');\nconst linhas = yaml.split(/\\r?\\n/);\nconst regras = linhas\n  .map((linha, i) => ({ linha, anterior: linhas[i - 1] || '' }))\n  .filter(({ linha }) => /^\\s*-\\s*(from|to|ports)\\s*:/.test(linha));\nreturn regras.length >= 4\n  && regras.every(({ linha, anterior }) => linha.includes('#') || /^\\s*#/.test(anterior));\n"
+          },
+          {
+            "type": "latency",
+            "threshold": 5000
+          },
+          {
+            "type": "cost",
+            "threshold": 0.01
+          }
+        ]
+      }
+    ],
+    "env": {},
+    "outputPath": [
+      "Evidências/Checkpoint-08/corrigir-manifesto-network-policy-v5.json"
+    ],
+    "extensions": [],
+    "metadata": {},
+    "evaluateOptions": {
+      "repeat": 3,
+      "cache": false
+    },
+    "basePath": "/home/alexandre/Documentos/github/prompt-registry/devops/corrigir-manifesto-network-policy"
+  },
+  "shareableUrl": null,
+  "metadata": {
+    "promptfooVersion": "0.125.1",
+    "nodeVersion": "v25.9.0",
+    "platform": "linux",
+    "arch": "x64",
+    "exportedAt": "2026-11-06T00:10:33.852Z",
+    "evaluationCreatedAt": "2026-11-06T00:10:30.422Z"
+  },
+  "vars": [
+    "snapshot_manifesto",
+    "snapshot_network_policy",
+    "snapshot_servicos"
+  ],
+  "runtimeOptions": {
+    "eventSource": "cli",
+    "repeat": 3,
+    "cache": false,
+    "showProgressBar": false,
+    "maxConcurrency": 4
+  }
+}

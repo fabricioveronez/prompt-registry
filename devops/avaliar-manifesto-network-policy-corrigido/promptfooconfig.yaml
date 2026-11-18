@@ -1,0 +1,68 @@
+# Checkpoint 10. Rodar a partir da raiz do repositório:
+# npx promptfoo@latest eval -c devops/avaliar-manifesto-network-policy-corrigido/promptfooconfig.yaml
+# O prompt já é um avaliador: ele emite nota e status, então os testes são todos determinísticos.
+prompts:
+  - file://prompt-sem-frontmatter.cjs
+providers:
+  - id: openai:gpt-4.1-mini
+    config:
+      # O padrão do promptfoo é 1024 tokens, o que corta o relatório no meio.
+      max_tokens: 8192
+evaluateOptions:
+  # A saída varia entre execuções, e o assert de latência exige chamadas reais, sem cache.
+  repeat: 3
+  cache: false
+defaultTest:
+  vars:
+    snapshot_inputs_originais: file://entrada/inputs_originais.txt
+  assert:
+    - type: regex
+      metric: formato
+      value: '## 1\. Tabela de Pontuação[\s\S]*## 2\. Pontuação Final[\s\S]*## 3\. Análise Detalhada[\s\S]*## 4\. Parecer Final'
+    - type: javascript
+      metric: nota_coerente
+      value: |
+        // A nota final tem de ser a média ponderada (40/30/15/15) das notas da tabela. A folga de 0.3
+        // aceita o arredondamento para meio ponto que o modelo às vezes faz (ex.: 1.725 virou 2.0).
+        const linha = (nome) => {
+          const m = output.match(new RegExp(nome + '[^|]*\\|\\s*\\**([0-5](?:[.,]\\d)?)'));
+          return m ? parseFloat(m[1].replace(',', '.')) : NaN;
+        };
+        const notas = [linha('Fidelidade'), linha('Conformidade'), linha('Sintaxe'), linha('Resolução')];
+        const final = output.match(/NOTA FINAL:\s*\**\[?\s*([0-5](?:[.,]\d+)?)/);
+        if (!final || notas.some(Number.isNaN)) return false;
+        const ponderada = notas[0] * 0.4 + notas[1] * 0.3 + notas[2] * 0.15 + notas[3] * 0.15;
+        return Math.abs(parseFloat(final[1].replace(',', '.')) - ponderada) <= 0.3;
+    - type: latency
+      threshold: 60000
+    - type: cost
+      threshold: 0.01
+tests:
+  - description: Correção conforme do CP06 (deve aprovar)
+    vars:
+      snapshot_resultado_correcao: file://entrada/correcao_conforme.md
+    assert:
+      - type: javascript
+        metric: aprova_conforme
+        value: |
+          const final = output.match(/NOTA FINAL:\s*\**\[?\s*([0-5](?:[.,]\d+)?)/);
+          return /APROVADO PARA DEPLOY/.test(output)
+            && !/Status:\**\s*\**REPROVADO/.test(output)
+            && !!final && parseFloat(final[1].replace(',', '.')) >= 4.0;
+  - description: Correção com labels inventados e egress aberto (deve reprovar)
+    vars:
+      snapshot_resultado_correcao: file://entrada/correcao_nao_conforme.md
+    assert:
+      - type: javascript
+        metric: reprova_nao_conforme
+        value: |
+          const final = output.match(/NOTA FINAL:\s*\**\[?\s*([0-5](?:[.,]\d+)?)/);
+          return /Status:\**\s*\**REPROVADO/.test(output)
+            && !!final && parseFloat(final[1].replace(',', '.')) <= 3.0;
+      # As alucinações plantadas precisam ser apontadas, não só a nota baixa.
+      - type: icontains-all
+        metric: aponta_alucinacoes
+        value: [sentinel-api, prometheus]
+      - type: icontains-any
+        metric: aponta_egress_aberto
+        value: ['allow all', 'allow-all', '- {}', 'egress aberto', 'qualquer destino']

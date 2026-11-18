@@ -210,6 +210,7 @@ Listar ao usuário, em ordem, todos os arquivos criados e atualizados com caminh
 
 - Quais campos ficaram como `_A preencher_` (se houver).
 - Se a lista de `inputs` ficou vazia por o prompt usar placeholders fora do padrão `{{...}}`.
+- Se a categoria for `devops/` ou `desenvolvimento/`: o prompt ainda precisa de um `promptfooconfig.yaml` na própria pasta (ver "Testes com promptfoo" no `CLAUDE.md`). Sem ele, o job "Cobertura de testes" do pipeline reprova o pull request.
 - Que **nenhum commit foi feito** — revisar com `git status` / `git diff` e commitar manualmente quando estiver satisfeito.
 
 ---

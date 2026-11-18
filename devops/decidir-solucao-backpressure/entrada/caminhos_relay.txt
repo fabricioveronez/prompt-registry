@@ -1,0 +1,4 @@
+- dar prioridade ao Sentinel (alerting em tempo real) na frente do Forge (que pode esperar até 15min);
+- guardar o que não foi processado numa fila separada para reprocessar depois (o que se chama dead-letter queue);
+- dividir o Relay por cliente, para que um cliente barulhento não atrapalhe os outros;
+- aumentar automaticamente o número de consumidores quando a carga sobe.

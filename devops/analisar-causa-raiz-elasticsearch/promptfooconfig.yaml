@@ -1,0 +1,33 @@
+prompts:
+  - file://prompt-sem-frontmatter.cjs
+providers:
+  - openai:gpt-5.6-luna
+evaluateOptions:
+  # O modelo e o juiz variam entre execuções: qualquer repetição reprovada barra a mudança.
+  # Sem cache, a latência é medida de verdade e o juiz não reaproveita um veredito antigo.
+  repeat: 3
+  cache: false
+tests:
+  - description: Incidente Cerebro de 2026-05-13 (reindexação travada)
+    vars:
+      snapshot_config: file://incidente/snapshot_config.txt
+      snapshot_metricas: file://incidente/snapshot_metricas.txt
+      snapshot_logs: file://incidente/snapshot_logs.txt
+    options:
+      # A rubrica fica no rubricPrompt porque um "value: file://" não recebe as variáveis
+      rubricPrompt: file://rubrica-juiz.txt
+    assert:
+      # Camada determinística (CP08): formato, latência e custo
+      - type: regex
+        value: '## 1\. Resumo Executivo[\s\S]*## 2\. Diagnóstico[\s\S]*## 3\. Matriz[\s\S]*## 4\. Cronologia[\s\S]*## 5\. Plano de Ação'
+      - type: latency
+        threshold: 120000
+      - type: cost
+        threshold: 0.05
+      # Gate de qualidade (CP09): score = total/8, logo 0.75 = corte de 6/8.
+      # O critério zerado reprova pelo campo "pass" do juiz.
+      - type: llm-rubric
+        metric: qualidade_rca
+        threshold: 0.75
+        provider: openai:gpt-5.6-luna
+        value: Rubrica de causa-raiz em rubrica-juiz.txt

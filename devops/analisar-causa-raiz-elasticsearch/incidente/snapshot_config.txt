@@ -1,0 +1,12 @@
+# cerebro.yaml — configuração do cluster Elasticsearch (repositório de infra)
+cerebro:
+  shards: 12
+  replicas_per_shard: 1
+  jvm_heap: 8g
+  refresh_interval: 1s
+  reindex_job:
+    schedule: "0 2 * * *"     # roda todo dia às 02:00
+    avg_duration_min: 90      # normalmente termina ~03:30
+  query_cache:
+    enabled: true
+    size_mb: 512

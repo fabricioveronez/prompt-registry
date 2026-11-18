@@ -1,0 +1,53 @@
+# Checkpoint 10. Rodar a partir da raiz do repositório:
+# npx promptfoo@latest eval -c desenvolvimento/planejar-migracao-incremental-batch-tempo-real/promptfooconfig.yaml
+# Passo 2 da cadeia do Forge. A entrada é a saída fixa do passo 1 no CP05, não uma execução ao vivo.
+prompts:
+  - file://prompt-sem-frontmatter.cjs
+providers:
+  - id: openai:gpt-4.1-mini
+    config:
+      # O padrão do promptfoo é 1024 tokens, o que corta o relatório no meio.
+      max_tokens: 8192
+evaluateOptions:
+  # A saída varia entre execuções, e o assert de latência exige chamadas reais, sem cache.
+  repeat: 3
+  cache: false
+tests:
+  - description: Diagnóstico do Forge gerado no CP05
+    vars:
+      resultado_prompt_1: file://entrada/resultado_prompt_1.md
+    assert:
+      - type: regex
+        metric: formato
+        value: '## 1\. Análise Estratégica[\s\S]*## 2\. Escolha da Estratégia[\s\S]*## 3\. Roteiro Passo a Passo[\s\S]*## 4\. Matriz de Riscos[\s\S]*## 5\. Bloco de Exportação'
+      - type: javascript
+        metric: quatro_fases
+        value: '[1, 2, 3, 4].every((n) => new RegExp(`Fase ${n}`).test(output))'
+      - type: regex
+        metric: bloco_passo2
+        # O passo 3 consome este bloco: sem ele a cadeia quebra.
+        value: '<passo2_result>[\s\S]{200,}</passo2_result>'
+      - type: icontains
+        metric: cita_rollback
+        value: rollback
+      - type: latency
+        threshold: 120000
+      - type: cost
+        threshold: 0.02
+      - type: llm-rubric
+        metric: plano_reversivel
+        threshold: 0.75
+        provider: openai:gpt-5.6-luna
+        value: |
+          Você avalia um plano de migração incremental do pipeline Forge (lote para tempo real).
+          Requisitos do contexto: sem big-bang; o lote e o tempo real coexistem; os dependentes
+          Sentinel, Cerebro e o billing da Pepper continuam funcionando durante a transição; toda fase pode ser revertida.
+
+          Critérios (cada um vale 1 ponto):
+          P1. A estratégia escolhida é incremental (ex.: Strangler Fig, dual-run, shadow), e não cutover direto.
+          P2. As fases que afetam produção (coexistência e cutover) têm um caminho de reversão concreto
+              (o que desligar, o que reativar). A fase de preparação não afeta produção e não precisa de reversão.
+          P3. O plano diz como Sentinel, Cerebro e Pepper são atendidos durante a coexistência e em que ordem migram.
+          P4. Os riscos são específicos da migração (ex.: duplicidade, divergência de dados, late data, custo duplicado), não genéricos.
+
+          score = pontos / 4. pass = true somente se P1 e P2 forem atendidos e score >= 0.75.

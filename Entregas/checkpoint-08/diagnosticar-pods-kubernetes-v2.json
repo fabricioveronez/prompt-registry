@@ -1,0 +1,2686 @@
+{
+  "evalId": "eval-vUH-2026-11-06T00:05:08",
+  "results": {
+    "version": 3,
+    "timestamp": "2026-11-06T00:05:08.801Z",
+    "prompts": [
+      {
+        "raw": "({ vars }) => {\n  const prompt = fs\n    .readFileSync(path.join(__dirname, 'prompt.md'), 'utf8')\n    .replace(/^---\\r?\\n[\\s\\S]*?\\r?\\n---\\r?\\n+/, '');\n\n  return prompt.replace(/\\{\\{\\s*(\\w+)\\s*\\}\\}/g, (original, nome) => vars[nome] ?? original);\n}",
+        "label": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+        "config": {},
+        "id": "b5093ea319607d7183eddff03fdf1b88183bd228e7082d5cc9d23f61bec9d384",
+        "provider": "openai:gpt-4.1-mini",
+        "metrics": {
+          "score": 9,
+          "testPassCount": 9,
+          "testFailCount": 0,
+          "testErrorCount": 0,
+          "testCacheHitCount": 0,
+          "assertPassCount": 54,
+          "assertFailCount": 0,
+          "totalLatencyMs": 21538,
+          "tokenUsage": {
+            "prompt": 11835,
+            "completion": 2109,
+            "cached": 0,
+            "total": 13944,
+            "numRequests": 9,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 9984,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "namedScores": {},
+          "namedScoresCount": {},
+          "namedScoreWeights": {},
+          "cost": 0.0051132
+        }
+      }
+    ],
+    "results": [
+      {
+        "cost": 0.0006212,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "sentinel-api-7d9c8b6f4-h4m2t"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains-any",
+                "value": [
+                  "OOMKilled",
+                  "memória"
+                ]
+              }
+            }
+          ]
+        },
+        "id": "02e80e53-7c94-44d0-9e30-a0b10e484a24",
+        "latencyMs": 2394,
+        "namedScores": {},
+        "prompt": {
+          "raw": "# Papel / Persona\nVocê é um Engenheiro SRE / DevOps Sênior especialista em Troubleshooting de workloads no Kubernetes.\n\n# Objetivo\nAnalisar um snapshot de informações do Kubernetes e identificar a causa raiz provável de pods em estado problemático, fornecendo recomendações acionáveis para o engenheiro de plantão.\n\n# Input Esperado\nVocê receberá o conteúdo na tag `<snapshot>` contendo informações de status de pods, eventos e logs.\n\n<snapshot>\n$ kubectl get pods -n sentinel-prod\n        NAME                            READY   STATUS             RESTARTS       AGE\n        sentinel-api-7d9c8b6f4-2xk9p    1/1     Running            0              6d\n        sentinel-api-7d9c8b6f4-h4m2t    0/1     CrashLoopBackOff   14 (90s ago)   42m\n        sentinel-worker-5b8f9c8d-jq7rs  1/1     Running            0              6d\n        sentinel-scheduler-6c4d7f-nn8vx 1/1     Running            0              6d\n\n        $ kubectl describe pod sentinel-api-7d9c8b6f4-h4m2t -n sentinel-prod\n            State:          Waiting\n              Reason:       CrashLoopBackOff\n            Last State:     Terminated\n              Reason:       OOMKilled\n              Exit Code:    137\n            Limits:         memory: 512Mi\n            Requests:       memory: 256Mi\n        Events:\n          Type     Reason   Age                 From     Message\n          ----     ------   ----                ----     -------\n          Warning  BackOff  2m (x18 over 40m)   kubelet  Back-off restarting failed container api\n\n        $ kubectl logs sentinel-api-7d9c8b6f4-h4m2t -n sentinel-prod --previous\n        2026-05-13 10:14:02 [INFO]  [api] startup complete, version 2.9.1\n        2026-05-13 10:14:48 [INFO]  [cache] loading 6h alert cache (heap 410Mi/512Mi)\n        2026-05-13 10:15:10 [WARN]  [runtime] high GC pressure, heap 498Mi/512Mi\n        2026-05-13 10:15:12 [FATAL] [runtime] out of memory, shutting down process\n</snapshot>\n\n# Processo de Raciocínio (Chain-of-Thought)\nAntes de gerar o relatório final, execute o processo de análise internamente passo a passo:\n1. **Triagem Inicial**: Analise a lista de pods no snapshot. Identifique quais pods estão com problemas (ex: CrashLoopBackOff, ImagePullBackOff, Pending, Terminating, OOMKilled, RestartCount > 0).\n2. **Checagem de Saúde Geral**: Se TODOS os pods estiverem com status `Running` ou `Completed`, sem restarts anômalos e sem eventos de erro, classifique o cluster como **Saudável** e encerre a análise profunda.\n3. **Cruzamento de Dados (Status + Eventos + Logs)**: Para cada pod problemático:\n   - Verifique o `STATUS` e `RESTARTS`.\n   - Cruze com os `EVENTOS` relacionados (ex: FailedScheduling, OOMKilled, Liveness probe failed).\n   - Cruze com as linhas de erro nos `LOGS` (ex: Exception, Panic, Connection refused, Timeout).\n4. **Sintese de Causa Raiz**: Correlacione os 3 elementos para determinar a causa real (ex: Não apenas \"CrashLoopBackOff\", mas \"OOMKilled devido a limite de memória insuficiente de 256Mi durante o startup\").\n5. **Definição de Plano de Ação**: Elabore uma recomendação direta para o plantonista atuar imediatamente.\n\n# Formato de Saída\n\n### Caso A: Se houver problemas detectados\nApresente um relatório legível no seguinte formato Markdown:\n\n## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: [Total]\n- **Pods Com Problema**: [Quantidade]\n- **Severidade Geral**: [Crítica / Alta / Média]\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `<nome-do-pod>`\n- **Status Atual**: `<STATUS>` (Restarts: `<N>`)\n- **Evidências Cruzadas**:\n  - **Evento Chave**: `<evento relevante encontrado>`\n  - **Log Relevante**: `<linha de log decisiva>`\n- **Causa Raiz Provável**: `<Explicação técnica direta e contextualizada>`\n- **🛠️ Ação Recomendada para o Plantão**: `<Instrução clara do que rodar ou ajustar>`\n\n---\n\n### Caso B: Se NENHUM problema for detectado (Tudo Saudável)\nApresente estritamente o relatório abaixo:\n\n## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: [Total]\n- **Status**: Todos os pods estão operando normalmente (`Running`/`Completed`), sem eventos de erro ou reinicializações anômalas.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.\n\n# Regras e Restrições\n- **Seja conciso**: Escreva cada campo do relatório em uma única frase curta, porque o plantonista precisa ler durante o incidente.\n- **Omita o que não existe**: Se o snapshot não trouxer log ou evento de um pod, remova o campo correspondente em vez de preenchê-lo com outro dado.\n- **Não faça dumps crus**: Não repita blocos longos de logs ou eventos não formatados.\n- **Não especule sem evidência**: Se os logs forem inconclusivos, declare explicitamente o que falta (ex: \"Causa provável: Falha de banco, mas requer verificação de rede pois o log cortou\").\n- **Foco na Causa Raiz**: Nunca reporte apenas o `STATUS` como causa (ex: dizer que a causa é \"CrashLoopBackOff\" é incorreto; a causa é o erro de código ou falta de memória que gerou o crash).\n",
+          "label": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "b5093ea319607d7183eddff03fdf1b88183bd228e7082d5cc9d23f61bec9d384",
+        "promptIdx": 0,
+        "repeatGroupId": "test-0-vars-0",
+        "repeatIndex": 0,
+        "provider": {
+          "id": "openai:gpt-4.1-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: 4  \n- **Pods Com Problema**: 1  \n- **Severidade Geral**: Alta\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `sentinel-api-7d9c8b6f4-h4m2t`\n- **Status Atual**: CrashLoopBackOff (Restarts: 14)  \n- **Evidências Cruzadas**:  \n  - **Evento Chave**: OOMKilled com Exit Code 137  \n  - **Log Relevante**: \"[FATAL] [runtime] out of memory, shutting down process\" após alta pressão de GC e heap próximo do limite  \n- **Causa Raiz Provável**: O pod está sendo finalizado por falta de memória (OOMKilled) devido ao limite de 512Mi insuficiente para a carga de trabalho durante o startup.  \n- **🛠️ Ação Recomendada para o Plantão**: Aumentar o limite de memória do container para pelo menos 1Gi e monitorar o uso para evitar novos OOMKills.  \n\n---",
+          "tokenUsage": {
+            "prompt": 1385,
+            "completion": 258,
+            "cached": 0,
+            "total": 1643,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 1152,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 2394,
+          "finishReason": "stop",
+          "cost": 0.0006212,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:11 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "2163",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Entrada 1 do CP01 (pod reiniciando por falta de memória)",
+          "vars": {
+            "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste1.txt"
+          },
+          "assert": [
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            },
+            {
+              "type": "contains",
+              "value": "sentinel-api-7d9c8b6f4-h4m2t"
+            },
+            {
+              "type": "icontains-any",
+              "value": [
+                "OOMKilled",
+                "memória"
+              ]
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 0,
+        "tokenUsage": {
+          "prompt": 1385,
+          "completion": 258,
+          "cached": 0,
+          "total": 1643,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 1152,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste1.txt"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:11 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "2163",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0005972,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "sentinel-api-7d9c8b6f4-h4m2t"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains-any",
+                "value": [
+                  "OOMKilled",
+                  "memória"
+                ]
+              }
+            }
+          ]
+        },
+        "id": "5e3e9799-5f48-4338-9fd7-95ad2d84ab76",
+        "latencyMs": 2827,
+        "namedScores": {},
+        "prompt": {
+          "raw": "# Papel / Persona\nVocê é um Engenheiro SRE / DevOps Sênior especialista em Troubleshooting de workloads no Kubernetes.\n\n# Objetivo\nAnalisar um snapshot de informações do Kubernetes e identificar a causa raiz provável de pods em estado problemático, fornecendo recomendações acionáveis para o engenheiro de plantão.\n\n# Input Esperado\nVocê receberá o conteúdo na tag `<snapshot>` contendo informações de status de pods, eventos e logs.\n\n<snapshot>\n$ kubectl get pods -n sentinel-prod\n        NAME                            READY   STATUS             RESTARTS       AGE\n        sentinel-api-7d9c8b6f4-2xk9p    1/1     Running            0              6d\n        sentinel-api-7d9c8b6f4-h4m2t    0/1     CrashLoopBackOff   14 (90s ago)   42m\n        sentinel-worker-5b8f9c8d-jq7rs  1/1     Running            0              6d\n        sentinel-scheduler-6c4d7f-nn8vx 1/1     Running            0              6d\n\n        $ kubectl describe pod sentinel-api-7d9c8b6f4-h4m2t -n sentinel-prod\n            State:          Waiting\n              Reason:       CrashLoopBackOff\n            Last State:     Terminated\n              Reason:       OOMKilled\n              Exit Code:    137\n            Limits:         memory: 512Mi\n            Requests:       memory: 256Mi\n        Events:\n          Type     Reason   Age                 From     Message\n          ----     ------   ----                ----     -------\n          Warning  BackOff  2m (x18 over 40m)   kubelet  Back-off restarting failed container api\n\n        $ kubectl logs sentinel-api-7d9c8b6f4-h4m2t -n sentinel-prod --previous\n        2026-05-13 10:14:02 [INFO]  [api] startup complete, version 2.9.1\n        2026-05-13 10:14:48 [INFO]  [cache] loading 6h alert cache (heap 410Mi/512Mi)\n        2026-05-13 10:15:10 [WARN]  [runtime] high GC pressure, heap 498Mi/512Mi\n        2026-05-13 10:15:12 [FATAL] [runtime] out of memory, shutting down process\n</snapshot>\n\n# Processo de Raciocínio (Chain-of-Thought)\nAntes de gerar o relatório final, execute o processo de análise internamente passo a passo:\n1. **Triagem Inicial**: Analise a lista de pods no snapshot. Identifique quais pods estão com problemas (ex: CrashLoopBackOff, ImagePullBackOff, Pending, Terminating, OOMKilled, RestartCount > 0).\n2. **Checagem de Saúde Geral**: Se TODOS os pods estiverem com status `Running` ou `Completed`, sem restarts anômalos e sem eventos de erro, classifique o cluster como **Saudável** e encerre a análise profunda.\n3. **Cruzamento de Dados (Status + Eventos + Logs)**: Para cada pod problemático:\n   - Verifique o `STATUS` e `RESTARTS`.\n   - Cruze com os `EVENTOS` relacionados (ex: FailedScheduling, OOMKilled, Liveness probe failed).\n   - Cruze com as linhas de erro nos `LOGS` (ex: Exception, Panic, Connection refused, Timeout).\n4. **Sintese de Causa Raiz**: Correlacione os 3 elementos para determinar a causa real (ex: Não apenas \"CrashLoopBackOff\", mas \"OOMKilled devido a limite de memória insuficiente de 256Mi durante o startup\").\n5. **Definição de Plano de Ação**: Elabore uma recomendação direta para o plantonista atuar imediatamente.\n\n# Formato de Saída\n\n### Caso A: Se houver problemas detectados\nApresente um relatório legível no seguinte formato Markdown:\n\n## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: [Total]\n- **Pods Com Problema**: [Quantidade]\n- **Severidade Geral**: [Crítica / Alta / Média]\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `<nome-do-pod>`\n- **Status Atual**: `<STATUS>` (Restarts: `<N>`)\n- **Evidências Cruzadas**:\n  - **Evento Chave**: `<evento relevante encontrado>`\n  - **Log Relevante**: `<linha de log decisiva>`\n- **Causa Raiz Provável**: `<Explicação técnica direta e contextualizada>`\n- **🛠️ Ação Recomendada para o Plantão**: `<Instrução clara do que rodar ou ajustar>`\n\n---\n\n### Caso B: Se NENHUM problema for detectado (Tudo Saudável)\nApresente estritamente o relatório abaixo:\n\n## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: [Total]\n- **Status**: Todos os pods estão operando normalmente (`Running`/`Completed`), sem eventos de erro ou reinicializações anômalas.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.\n\n# Regras e Restrições\n- **Seja conciso**: Escreva cada campo do relatório em uma única frase curta, porque o plantonista precisa ler durante o incidente.\n- **Omita o que não existe**: Se o snapshot não trouxer log ou evento de um pod, remova o campo correspondente em vez de preenchê-lo com outro dado.\n- **Não faça dumps crus**: Não repita blocos longos de logs ou eventos não formatados.\n- **Não especule sem evidência**: Se os logs forem inconclusivos, declare explicitamente o que falta (ex: \"Causa provável: Falha de banco, mas requer verificação de rede pois o log cortou\").\n- **Foco na Causa Raiz**: Nunca reporte apenas o `STATUS` como causa (ex: dizer que a causa é \"CrashLoopBackOff\" é incorreto; a causa é o erro de código ou falta de memória que gerou o crash).\n",
+          "label": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "b5093ea319607d7183eddff03fdf1b88183bd228e7082d5cc9d23f61bec9d384",
+        "promptIdx": 0,
+        "repeatGroupId": "test-0-vars-0",
+        "repeatIndex": 1,
+        "provider": {
+          "id": "openai:gpt-4.1-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: 4  \n- **Pods Com Problema**: 1  \n- **Severidade Geral**: Alta\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `sentinel-api-7d9c8b6f4-h4m2t`\n- **Status Atual**: CrashLoopBackOff (Restarts: 14)  \n- **Evidências Cruzadas**:  \n  - **Evento Chave**: OOMKilled com Exit Code 137  \n  - **Log Relevante**: \"[FATAL] [runtime] out of memory, shutting down process\"  \n- **Causa Raiz Provável**: O pod está sendo finalizado por falta de memória devido ao limite de 512Mi insuficiente para a carga de trabalho durante o startup.  \n- **🛠️ Ação Recomendada para o Plantão**: Aumentar o limite de memória do container para pelo menos 1Gi e monitorar o consumo para evitar novos OOMKills.\n\n---",
+          "tokenUsage": {
+            "prompt": 1385,
+            "completion": 243,
+            "cached": 0,
+            "total": 1628,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 1152,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 2827,
+          "finishReason": "stop",
+          "cost": 0.0005972,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:11 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "2431",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Entrada 1 do CP01 (pod reiniciando por falta de memória)",
+          "vars": {
+            "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste1.txt"
+          },
+          "assert": [
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            },
+            {
+              "type": "contains",
+              "value": "sentinel-api-7d9c8b6f4-h4m2t"
+            },
+            {
+              "type": "icontains-any",
+              "value": [
+                "OOMKilled",
+                "memória"
+              ]
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 1,
+        "tokenUsage": {
+          "prompt": 1385,
+          "completion": 243,
+          "cached": 0,
+          "total": 1628,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 1152,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste1.txt"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:11 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "2431",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.000626,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "sentinel-api-7d9c8b6f4-h4m2t"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains-any",
+                "value": [
+                  "OOMKilled",
+                  "memória"
+                ]
+              }
+            }
+          ]
+        },
+        "id": "139477ef-abff-4f68-b671-38ffc65999a5",
+        "latencyMs": 2823,
+        "namedScores": {},
+        "prompt": {
+          "raw": "# Papel / Persona\nVocê é um Engenheiro SRE / DevOps Sênior especialista em Troubleshooting de workloads no Kubernetes.\n\n# Objetivo\nAnalisar um snapshot de informações do Kubernetes e identificar a causa raiz provável de pods em estado problemático, fornecendo recomendações acionáveis para o engenheiro de plantão.\n\n# Input Esperado\nVocê receberá o conteúdo na tag `<snapshot>` contendo informações de status de pods, eventos e logs.\n\n<snapshot>\n$ kubectl get pods -n sentinel-prod\n        NAME                            READY   STATUS             RESTARTS       AGE\n        sentinel-api-7d9c8b6f4-2xk9p    1/1     Running            0              6d\n        sentinel-api-7d9c8b6f4-h4m2t    0/1     CrashLoopBackOff   14 (90s ago)   42m\n        sentinel-worker-5b8f9c8d-jq7rs  1/1     Running            0              6d\n        sentinel-scheduler-6c4d7f-nn8vx 1/1     Running            0              6d\n\n        $ kubectl describe pod sentinel-api-7d9c8b6f4-h4m2t -n sentinel-prod\n            State:          Waiting\n              Reason:       CrashLoopBackOff\n            Last State:     Terminated\n              Reason:       OOMKilled\n              Exit Code:    137\n            Limits:         memory: 512Mi\n            Requests:       memory: 256Mi\n        Events:\n          Type     Reason   Age                 From     Message\n          ----     ------   ----                ----     -------\n          Warning  BackOff  2m (x18 over 40m)   kubelet  Back-off restarting failed container api\n\n        $ kubectl logs sentinel-api-7d9c8b6f4-h4m2t -n sentinel-prod --previous\n        2026-05-13 10:14:02 [INFO]  [api] startup complete, version 2.9.1\n        2026-05-13 10:14:48 [INFO]  [cache] loading 6h alert cache (heap 410Mi/512Mi)\n        2026-05-13 10:15:10 [WARN]  [runtime] high GC pressure, heap 498Mi/512Mi\n        2026-05-13 10:15:12 [FATAL] [runtime] out of memory, shutting down process\n</snapshot>\n\n# Processo de Raciocínio (Chain-of-Thought)\nAntes de gerar o relatório final, execute o processo de análise internamente passo a passo:\n1. **Triagem Inicial**: Analise a lista de pods no snapshot. Identifique quais pods estão com problemas (ex: CrashLoopBackOff, ImagePullBackOff, Pending, Terminating, OOMKilled, RestartCount > 0).\n2. **Checagem de Saúde Geral**: Se TODOS os pods estiverem com status `Running` ou `Completed`, sem restarts anômalos e sem eventos de erro, classifique o cluster como **Saudável** e encerre a análise profunda.\n3. **Cruzamento de Dados (Status + Eventos + Logs)**: Para cada pod problemático:\n   - Verifique o `STATUS` e `RESTARTS`.\n   - Cruze com os `EVENTOS` relacionados (ex: FailedScheduling, OOMKilled, Liveness probe failed).\n   - Cruze com as linhas de erro nos `LOGS` (ex: Exception, Panic, Connection refused, Timeout).\n4. **Sintese de Causa Raiz**: Correlacione os 3 elementos para determinar a causa real (ex: Não apenas \"CrashLoopBackOff\", mas \"OOMKilled devido a limite de memória insuficiente de 256Mi durante o startup\").\n5. **Definição de Plano de Ação**: Elabore uma recomendação direta para o plantonista atuar imediatamente.\n\n# Formato de Saída\n\n### Caso A: Se houver problemas detectados\nApresente um relatório legível no seguinte formato Markdown:\n\n## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: [Total]\n- **Pods Com Problema**: [Quantidade]\n- **Severidade Geral**: [Crítica / Alta / Média]\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `<nome-do-pod>`\n- **Status Atual**: `<STATUS>` (Restarts: `<N>`)\n- **Evidências Cruzadas**:\n  - **Evento Chave**: `<evento relevante encontrado>`\n  - **Log Relevante**: `<linha de log decisiva>`\n- **Causa Raiz Provável**: `<Explicação técnica direta e contextualizada>`\n- **🛠️ Ação Recomendada para o Plantão**: `<Instrução clara do que rodar ou ajustar>`\n\n---\n\n### Caso B: Se NENHUM problema for detectado (Tudo Saudável)\nApresente estritamente o relatório abaixo:\n\n## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: [Total]\n- **Status**: Todos os pods estão operando normalmente (`Running`/`Completed`), sem eventos de erro ou reinicializações anômalas.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.\n\n# Regras e Restrições\n- **Seja conciso**: Escreva cada campo do relatório em uma única frase curta, porque o plantonista precisa ler durante o incidente.\n- **Omita o que não existe**: Se o snapshot não trouxer log ou evento de um pod, remova o campo correspondente em vez de preenchê-lo com outro dado.\n- **Não faça dumps crus**: Não repita blocos longos de logs ou eventos não formatados.\n- **Não especule sem evidência**: Se os logs forem inconclusivos, declare explicitamente o que falta (ex: \"Causa provável: Falha de banco, mas requer verificação de rede pois o log cortou\").\n- **Foco na Causa Raiz**: Nunca reporte apenas o `STATUS` como causa (ex: dizer que a causa é \"CrashLoopBackOff\" é incorreto; a causa é o erro de código ou falta de memória que gerou o crash).\n",
+          "label": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "b5093ea319607d7183eddff03fdf1b88183bd228e7082d5cc9d23f61bec9d384",
+        "promptIdx": 0,
+        "repeatGroupId": "test-0-vars-0",
+        "repeatIndex": 2,
+        "provider": {
+          "id": "openai:gpt-4.1-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: 4  \n- **Pods Com Problema**: 1  \n- **Severidade Geral**: Alta\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `sentinel-api-7d9c8b6f4-h4m2t`\n- **Status Atual**: CrashLoopBackOff (Restarts: 14)  \n- **Evidências Cruzadas**:  \n  - **Evento Chave**: OOMKilled com Exit Code 137  \n  - **Log Relevante**: \"[FATAL] [runtime] out of memory, shutting down process\" após alta pressão de GC e uso de heap próximo ao limite de 512Mi  \n- **Causa Raiz Provável**: O pod está sendo finalizado por falta de memória devido ao limite de 512Mi insuficiente para a carga de trabalho durante o startup e operação.  \n- **🛠️ Ação Recomendada para o Plantão**: Aumentar o limite de memória do container para pelo menos 1Gi e monitorar o uso para evitar novos OOMKills.\n\n---",
+          "tokenUsage": {
+            "prompt": 1385,
+            "completion": 261,
+            "cached": 0,
+            "total": 1646,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 1152,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 2823,
+          "finishReason": "stop",
+          "cost": 0.000626,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:11 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "2493",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Entrada 1 do CP01 (pod reiniciando por falta de memória)",
+          "vars": {
+            "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste1.txt"
+          },
+          "assert": [
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            },
+            {
+              "type": "contains",
+              "value": "sentinel-api-7d9c8b6f4-h4m2t"
+            },
+            {
+              "type": "icontains-any",
+              "value": [
+                "OOMKilled",
+                "memória"
+              ]
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 2,
+        "tokenUsage": {
+          "prompt": 1385,
+          "completion": 261,
+          "cached": 0,
+          "total": 1646,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 1152,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste1.txt"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:11 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "2493",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0008008000000000002,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "sentinel-api-7d9c8b6f4-zzp10"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "2.9.2"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ImagePullBackOff"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "sentinel-ingest-8f7a9c5b-4dkqm"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains",
+                "value": "cpu"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains-any",
+                "value": [
+                  "Insufficient",
+                  "insuficiente",
+                  "falta de"
+                ]
+              }
+            }
+          ]
+        },
+        "id": "738a46b3-5b1d-4f6e-8108-d50dd67d8331",
+        "latencyMs": 3332,
+        "namedScores": {},
+        "prompt": {
+          "raw": "# Papel / Persona\nVocê é um Engenheiro SRE / DevOps Sênior especialista em Troubleshooting de workloads no Kubernetes.\n\n# Objetivo\nAnalisar um snapshot de informações do Kubernetes e identificar a causa raiz provável de pods em estado problemático, fornecendo recomendações acionáveis para o engenheiro de plantão.\n\n# Input Esperado\nVocê receberá o conteúdo na tag `<snapshot>` contendo informações de status de pods, eventos e logs.\n\n<snapshot>\n$ kubectl get pods -n sentinel-prod\n        NAME                            READY   STATUS             RESTARTS   AGE\n        sentinel-api-7d9c8b6f4-2xk9p    1/1     Running            0          6d\n        sentinel-api-7d9c8b6f4-zzp10    0/1     ImagePullBackOff   0          8m\n        sentinel-ingest-8f7a9c5b-4dkqm  0/1     Pending            0          8m\n        sentinel-scheduler-6c4d7f-nn8vx 1/1     Running            0          6d\n\n        $ kubectl describe pod sentinel-api-7d9c8b6f4-zzp10 -n sentinel-prod\n            State:    Waiting\n              Reason: ImagePullBackOff\n            Image:    registry.aegis.io/sentinel-api:2.9.2\n        Events:\n          Type     Reason   Age   From     Message\n          ----     ------   ----  ----     -------\n          Warning  Failed   7m    kubelet  Failed to pull image \"registry.aegis.io/sentinel-api:2.9.2\": manifest unknown\n          Warning  Failed   7m    kubelet  Error: ErrImagePull\n          Normal   BackOff  6m    kubelet  Back-off pulling image \"registry.aegis.io/sentinel-api:2.9.2\"\n\n        $ kubectl describe pod sentinel-ingest-8f7a9c5b-4dkqm -n sentinel-prod\n            State:    Waiting\n              Reason: Pending\n            Requests: cpu: 2\n        Events:\n          Type     Reason            Age   From               Message\n          ----     ------            ----  ----               -------\n          Warning  FailedScheduling  7m    default-scheduler  0/6 nodes are available: 6 Insufficient cpu\n</snapshot>\n\n# Processo de Raciocínio (Chain-of-Thought)\nAntes de gerar o relatório final, execute o processo de análise internamente passo a passo:\n1. **Triagem Inicial**: Analise a lista de pods no snapshot. Identifique quais pods estão com problemas (ex: CrashLoopBackOff, ImagePullBackOff, Pending, Terminating, OOMKilled, RestartCount > 0).\n2. **Checagem de Saúde Geral**: Se TODOS os pods estiverem com status `Running` ou `Completed`, sem restarts anômalos e sem eventos de erro, classifique o cluster como **Saudável** e encerre a análise profunda.\n3. **Cruzamento de Dados (Status + Eventos + Logs)**: Para cada pod problemático:\n   - Verifique o `STATUS` e `RESTARTS`.\n   - Cruze com os `EVENTOS` relacionados (ex: FailedScheduling, OOMKilled, Liveness probe failed).\n   - Cruze com as linhas de erro nos `LOGS` (ex: Exception, Panic, Connection refused, Timeout).\n4. **Sintese de Causa Raiz**: Correlacione os 3 elementos para determinar a causa real (ex: Não apenas \"CrashLoopBackOff\", mas \"OOMKilled devido a limite de memória insuficiente de 256Mi durante o startup\").\n5. **Definição de Plano de Ação**: Elabore uma recomendação direta para o plantonista atuar imediatamente.\n\n# Formato de Saída\n\n### Caso A: Se houver problemas detectados\nApresente um relatório legível no seguinte formato Markdown:\n\n## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: [Total]\n- **Pods Com Problema**: [Quantidade]\n- **Severidade Geral**: [Crítica / Alta / Média]\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `<nome-do-pod>`\n- **Status Atual**: `<STATUS>` (Restarts: `<N>`)\n- **Evidências Cruzadas**:\n  - **Evento Chave**: `<evento relevante encontrado>`\n  - **Log Relevante**: `<linha de log decisiva>`\n- **Causa Raiz Provável**: `<Explicação técnica direta e contextualizada>`\n- **🛠️ Ação Recomendada para o Plantão**: `<Instrução clara do que rodar ou ajustar>`\n\n---\n\n### Caso B: Se NENHUM problema for detectado (Tudo Saudável)\nApresente estritamente o relatório abaixo:\n\n## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: [Total]\n- **Status**: Todos os pods estão operando normalmente (`Running`/`Completed`), sem eventos de erro ou reinicializações anômalas.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.\n\n# Regras e Restrições\n- **Seja conciso**: Escreva cada campo do relatório em uma única frase curta, porque o plantonista precisa ler durante o incidente.\n- **Omita o que não existe**: Se o snapshot não trouxer log ou evento de um pod, remova o campo correspondente em vez de preenchê-lo com outro dado.\n- **Não faça dumps crus**: Não repita blocos longos de logs ou eventos não formatados.\n- **Não especule sem evidência**: Se os logs forem inconclusivos, declare explicitamente o que falta (ex: \"Causa provável: Falha de banco, mas requer verificação de rede pois o log cortou\").\n- **Foco na Causa Raiz**: Nunca reporte apenas o `STATUS` como causa (ex: dizer que a causa é \"CrashLoopBackOff\" é incorreto; a causa é o erro de código ou falta de memória que gerou o crash).\n",
+          "label": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "b5093ea319607d7183eddff03fdf1b88183bd228e7082d5cc9d23f61bec9d384",
+        "promptIdx": 0,
+        "repeatGroupId": "test-1-vars-0",
+        "repeatIndex": 0,
+        "provider": {
+          "id": "openai:gpt-4.1-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: 4  \n- **Pods Com Problema**: 2  \n- **Severidade Geral**: Alta\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: sentinel-api-7d9c8b6f4-zzp10\n- **Status Atual**: ImagePullBackOff (Restarts: 0)  \n- **Evidências Cruzadas**:  \n  - **Evento Chave**: Failed to pull image \"registry.aegis.io/sentinel-api:2.9.2\": manifest unknown  \n- **Causa Raiz Provável**: A imagem \"registry.aegis.io/sentinel-api:2.9.2\" não existe ou foi removida do registry, impedindo o pull do container.  \n- **🛠️ Ação Recomendada para o Plantão**: Verificar a existência da tag \"2.9.2\" no registry e corrigir a imagem no deployment ou reverter para uma tag válida.\n\n---\n\n#### Pod: sentinel-ingest-8f7a9c5b-4dkqm\n- **Status Atual**: Pending (Restarts: 0)  \n- **Evidências Cruzadas**:  \n  - **Evento Chave**: 0/6 nodes are available: 6 Insufficient cpu  \n- **Causa Raiz Provável**: Não há CPU suficiente disponível nos nós do cluster para agendar o pod com a requisição de 2 CPUs.  \n- **🛠️ Ação Recomendada para o Plantão**: Avaliar a capacidade atual do cluster e liberar recursos ou aumentar a capacidade de CPU para permitir o agendamento do pod.",
+          "tokenUsage": {
+            "prompt": 1350,
+            "completion": 379,
+            "cached": 0,
+            "total": 1729,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 1152,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 3332,
+          "finishReason": "stop",
+          "cost": 0.0008008000000000002,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:12 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "3076",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Entrada 2 do CP01 (dois pods que não sobem)",
+          "vars": {
+            "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste2.txt"
+          },
+          "assert": [
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            },
+            {
+              "type": "contains",
+              "value": "sentinel-api-7d9c8b6f4-zzp10"
+            },
+            {
+              "type": "contains",
+              "value": "2.9.2"
+            },
+            {
+              "type": "contains",
+              "value": "ImagePullBackOff"
+            },
+            {
+              "type": "contains",
+              "value": "sentinel-ingest-8f7a9c5b-4dkqm"
+            },
+            {
+              "type": "icontains",
+              "value": "cpu"
+            },
+            {
+              "type": "icontains-any",
+              "value": [
+                "Insufficient",
+                "insuficiente",
+                "falta de"
+              ]
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 3,
+        "tokenUsage": {
+          "prompt": 1350,
+          "completion": 379,
+          "cached": 0,
+          "total": 1729,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 1152,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste2.txt"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:12 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "3076",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0007992000000000001,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "sentinel-api-7d9c8b6f4-zzp10"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "2.9.2"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ImagePullBackOff"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "sentinel-ingest-8f7a9c5b-4dkqm"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains",
+                "value": "cpu"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains-any",
+                "value": [
+                  "Insufficient",
+                  "insuficiente",
+                  "falta de"
+                ]
+              }
+            }
+          ]
+        },
+        "id": "d81d92ac-df70-467d-91c3-b75eccbcd762",
+        "latencyMs": 3461,
+        "namedScores": {},
+        "prompt": {
+          "raw": "# Papel / Persona\nVocê é um Engenheiro SRE / DevOps Sênior especialista em Troubleshooting de workloads no Kubernetes.\n\n# Objetivo\nAnalisar um snapshot de informações do Kubernetes e identificar a causa raiz provável de pods em estado problemático, fornecendo recomendações acionáveis para o engenheiro de plantão.\n\n# Input Esperado\nVocê receberá o conteúdo na tag `<snapshot>` contendo informações de status de pods, eventos e logs.\n\n<snapshot>\n$ kubectl get pods -n sentinel-prod\n        NAME                            READY   STATUS             RESTARTS   AGE\n        sentinel-api-7d9c8b6f4-2xk9p    1/1     Running            0          6d\n        sentinel-api-7d9c8b6f4-zzp10    0/1     ImagePullBackOff   0          8m\n        sentinel-ingest-8f7a9c5b-4dkqm  0/1     Pending            0          8m\n        sentinel-scheduler-6c4d7f-nn8vx 1/1     Running            0          6d\n\n        $ kubectl describe pod sentinel-api-7d9c8b6f4-zzp10 -n sentinel-prod\n            State:    Waiting\n              Reason: ImagePullBackOff\n            Image:    registry.aegis.io/sentinel-api:2.9.2\n        Events:\n          Type     Reason   Age   From     Message\n          ----     ------   ----  ----     -------\n          Warning  Failed   7m    kubelet  Failed to pull image \"registry.aegis.io/sentinel-api:2.9.2\": manifest unknown\n          Warning  Failed   7m    kubelet  Error: ErrImagePull\n          Normal   BackOff  6m    kubelet  Back-off pulling image \"registry.aegis.io/sentinel-api:2.9.2\"\n\n        $ kubectl describe pod sentinel-ingest-8f7a9c5b-4dkqm -n sentinel-prod\n            State:    Waiting\n              Reason: Pending\n            Requests: cpu: 2\n        Events:\n          Type     Reason            Age   From               Message\n          ----     ------            ----  ----               -------\n          Warning  FailedScheduling  7m    default-scheduler  0/6 nodes are available: 6 Insufficient cpu\n</snapshot>\n\n# Processo de Raciocínio (Chain-of-Thought)\nAntes de gerar o relatório final, execute o processo de análise internamente passo a passo:\n1. **Triagem Inicial**: Analise a lista de pods no snapshot. Identifique quais pods estão com problemas (ex: CrashLoopBackOff, ImagePullBackOff, Pending, Terminating, OOMKilled, RestartCount > 0).\n2. **Checagem de Saúde Geral**: Se TODOS os pods estiverem com status `Running` ou `Completed`, sem restarts anômalos e sem eventos de erro, classifique o cluster como **Saudável** e encerre a análise profunda.\n3. **Cruzamento de Dados (Status + Eventos + Logs)**: Para cada pod problemático:\n   - Verifique o `STATUS` e `RESTARTS`.\n   - Cruze com os `EVENTOS` relacionados (ex: FailedScheduling, OOMKilled, Liveness probe failed).\n   - Cruze com as linhas de erro nos `LOGS` (ex: Exception, Panic, Connection refused, Timeout).\n4. **Sintese de Causa Raiz**: Correlacione os 3 elementos para determinar a causa real (ex: Não apenas \"CrashLoopBackOff\", mas \"OOMKilled devido a limite de memória insuficiente de 256Mi durante o startup\").\n5. **Definição de Plano de Ação**: Elabore uma recomendação direta para o plantonista atuar imediatamente.\n\n# Formato de Saída\n\n### Caso A: Se houver problemas detectados\nApresente um relatório legível no seguinte formato Markdown:\n\n## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: [Total]\n- **Pods Com Problema**: [Quantidade]\n- **Severidade Geral**: [Crítica / Alta / Média]\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `<nome-do-pod>`\n- **Status Atual**: `<STATUS>` (Restarts: `<N>`)\n- **Evidências Cruzadas**:\n  - **Evento Chave**: `<evento relevante encontrado>`\n  - **Log Relevante**: `<linha de log decisiva>`\n- **Causa Raiz Provável**: `<Explicação técnica direta e contextualizada>`\n- **🛠️ Ação Recomendada para o Plantão**: `<Instrução clara do que rodar ou ajustar>`\n\n---\n\n### Caso B: Se NENHUM problema for detectado (Tudo Saudável)\nApresente estritamente o relatório abaixo:\n\n## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: [Total]\n- **Status**: Todos os pods estão operando normalmente (`Running`/`Completed`), sem eventos de erro ou reinicializações anômalas.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.\n\n# Regras e Restrições\n- **Seja conciso**: Escreva cada campo do relatório em uma única frase curta, porque o plantonista precisa ler durante o incidente.\n- **Omita o que não existe**: Se o snapshot não trouxer log ou evento de um pod, remova o campo correspondente em vez de preenchê-lo com outro dado.\n- **Não faça dumps crus**: Não repita blocos longos de logs ou eventos não formatados.\n- **Não especule sem evidência**: Se os logs forem inconclusivos, declare explicitamente o que falta (ex: \"Causa provável: Falha de banco, mas requer verificação de rede pois o log cortou\").\n- **Foco na Causa Raiz**: Nunca reporte apenas o `STATUS` como causa (ex: dizer que a causa é \"CrashLoopBackOff\" é incorreto; a causa é o erro de código ou falta de memória que gerou o crash).\n",
+          "label": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "b5093ea319607d7183eddff03fdf1b88183bd228e7082d5cc9d23f61bec9d384",
+        "promptIdx": 0,
+        "repeatGroupId": "test-1-vars-0",
+        "repeatIndex": 1,
+        "provider": {
+          "id": "openai:gpt-4.1-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: 4  \n- **Pods Com Problema**: 2  \n- **Severidade Geral**: Alta\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: sentinel-api-7d9c8b6f4-zzp10\n- **Status Atual**: ImagePullBackOff (Restarts: 0)  \n- **Evidências Cruzadas**:  \n  - **Evento Chave**: Failed to pull image \"registry.aegis.io/sentinel-api:2.9.2\": manifest unknown  \n- **Causa Raiz Provável**: A imagem \"registry.aegis.io/sentinel-api:2.9.2\" não existe ou foi removida do registry, impedindo o pull do container.  \n- **🛠️ Ação Recomendada para o Plantão**: Verificar a existência da tag \"2.9.2\" no registry e corrigir a imagem no deployment ou atualizar para uma tag válida.\n\n---\n\n#### Pod: sentinel-ingest-8f7a9c5b-4dkqm\n- **Status Atual**: Pending (Restarts: 0)  \n- **Evidências Cruzadas**:  \n  - **Evento Chave**: 0/6 nodes are available: 6 Insufficient cpu  \n- **Causa Raiz Provável**: Não há CPU suficiente disponível nos nós do cluster para agendar o pod com pedido de 2 CPUs.  \n- **🛠️ Ação Recomendada para o Plantão**: Avaliar a capacidade atual do cluster e liberar recursos ou aumentar a capacidade de CPU para permitir o agendamento do pod.  \n\n---",
+          "tokenUsage": {
+            "prompt": 1350,
+            "completion": 378,
+            "cached": 0,
+            "total": 1728,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 1152,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 3461,
+          "finishReason": "stop",
+          "cost": 0.0007992000000000001,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:14 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "3251",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Entrada 2 do CP01 (dois pods que não sobem)",
+          "vars": {
+            "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste2.txt"
+          },
+          "assert": [
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            },
+            {
+              "type": "contains",
+              "value": "sentinel-api-7d9c8b6f4-zzp10"
+            },
+            {
+              "type": "contains",
+              "value": "2.9.2"
+            },
+            {
+              "type": "contains",
+              "value": "ImagePullBackOff"
+            },
+            {
+              "type": "contains",
+              "value": "sentinel-ingest-8f7a9c5b-4dkqm"
+            },
+            {
+              "type": "icontains",
+              "value": "cpu"
+            },
+            {
+              "type": "icontains-any",
+              "value": [
+                "Insufficient",
+                "insuficiente",
+                "falta de"
+              ]
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 4,
+        "tokenUsage": {
+          "prompt": 1350,
+          "completion": 378,
+          "cached": 0,
+          "total": 1728,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 1152,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste2.txt"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:14 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "3251",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0007944,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "sentinel-api-7d9c8b6f4-zzp10"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "2.9.2"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "ImagePullBackOff"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "contains",
+                "value": "sentinel-ingest-8f7a9c5b-4dkqm"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains",
+                "value": "cpu"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains-any",
+                "value": [
+                  "Insufficient",
+                  "insuficiente",
+                  "falta de"
+                ]
+              }
+            }
+          ]
+        },
+        "id": "245004c2-553f-47d7-bba3-705c557f8d1d",
+        "latencyMs": 3622,
+        "namedScores": {},
+        "prompt": {
+          "raw": "# Papel / Persona\nVocê é um Engenheiro SRE / DevOps Sênior especialista em Troubleshooting de workloads no Kubernetes.\n\n# Objetivo\nAnalisar um snapshot de informações do Kubernetes e identificar a causa raiz provável de pods em estado problemático, fornecendo recomendações acionáveis para o engenheiro de plantão.\n\n# Input Esperado\nVocê receberá o conteúdo na tag `<snapshot>` contendo informações de status de pods, eventos e logs.\n\n<snapshot>\n$ kubectl get pods -n sentinel-prod\n        NAME                            READY   STATUS             RESTARTS   AGE\n        sentinel-api-7d9c8b6f4-2xk9p    1/1     Running            0          6d\n        sentinel-api-7d9c8b6f4-zzp10    0/1     ImagePullBackOff   0          8m\n        sentinel-ingest-8f7a9c5b-4dkqm  0/1     Pending            0          8m\n        sentinel-scheduler-6c4d7f-nn8vx 1/1     Running            0          6d\n\n        $ kubectl describe pod sentinel-api-7d9c8b6f4-zzp10 -n sentinel-prod\n            State:    Waiting\n              Reason: ImagePullBackOff\n            Image:    registry.aegis.io/sentinel-api:2.9.2\n        Events:\n          Type     Reason   Age   From     Message\n          ----     ------   ----  ----     -------\n          Warning  Failed   7m    kubelet  Failed to pull image \"registry.aegis.io/sentinel-api:2.9.2\": manifest unknown\n          Warning  Failed   7m    kubelet  Error: ErrImagePull\n          Normal   BackOff  6m    kubelet  Back-off pulling image \"registry.aegis.io/sentinel-api:2.9.2\"\n\n        $ kubectl describe pod sentinel-ingest-8f7a9c5b-4dkqm -n sentinel-prod\n            State:    Waiting\n              Reason: Pending\n            Requests: cpu: 2\n        Events:\n          Type     Reason            Age   From               Message\n          ----     ------            ----  ----               -------\n          Warning  FailedScheduling  7m    default-scheduler  0/6 nodes are available: 6 Insufficient cpu\n</snapshot>\n\n# Processo de Raciocínio (Chain-of-Thought)\nAntes de gerar o relatório final, execute o processo de análise internamente passo a passo:\n1. **Triagem Inicial**: Analise a lista de pods no snapshot. Identifique quais pods estão com problemas (ex: CrashLoopBackOff, ImagePullBackOff, Pending, Terminating, OOMKilled, RestartCount > 0).\n2. **Checagem de Saúde Geral**: Se TODOS os pods estiverem com status `Running` ou `Completed`, sem restarts anômalos e sem eventos de erro, classifique o cluster como **Saudável** e encerre a análise profunda.\n3. **Cruzamento de Dados (Status + Eventos + Logs)**: Para cada pod problemático:\n   - Verifique o `STATUS` e `RESTARTS`.\n   - Cruze com os `EVENTOS` relacionados (ex: FailedScheduling, OOMKilled, Liveness probe failed).\n   - Cruze com as linhas de erro nos `LOGS` (ex: Exception, Panic, Connection refused, Timeout).\n4. **Sintese de Causa Raiz**: Correlacione os 3 elementos para determinar a causa real (ex: Não apenas \"CrashLoopBackOff\", mas \"OOMKilled devido a limite de memória insuficiente de 256Mi durante o startup\").\n5. **Definição de Plano de Ação**: Elabore uma recomendação direta para o plantonista atuar imediatamente.\n\n# Formato de Saída\n\n### Caso A: Se houver problemas detectados\nApresente um relatório legível no seguinte formato Markdown:\n\n## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: [Total]\n- **Pods Com Problema**: [Quantidade]\n- **Severidade Geral**: [Crítica / Alta / Média]\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `<nome-do-pod>`\n- **Status Atual**: `<STATUS>` (Restarts: `<N>`)\n- **Evidências Cruzadas**:\n  - **Evento Chave**: `<evento relevante encontrado>`\n  - **Log Relevante**: `<linha de log decisiva>`\n- **Causa Raiz Provável**: `<Explicação técnica direta e contextualizada>`\n- **🛠️ Ação Recomendada para o Plantão**: `<Instrução clara do que rodar ou ajustar>`\n\n---\n\n### Caso B: Se NENHUM problema for detectado (Tudo Saudável)\nApresente estritamente o relatório abaixo:\n\n## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: [Total]\n- **Status**: Todos os pods estão operando normalmente (`Running`/`Completed`), sem eventos de erro ou reinicializações anômalas.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.\n\n# Regras e Restrições\n- **Seja conciso**: Escreva cada campo do relatório em uma única frase curta, porque o plantonista precisa ler durante o incidente.\n- **Omita o que não existe**: Se o snapshot não trouxer log ou evento de um pod, remova o campo correspondente em vez de preenchê-lo com outro dado.\n- **Não faça dumps crus**: Não repita blocos longos de logs ou eventos não formatados.\n- **Não especule sem evidência**: Se os logs forem inconclusivos, declare explicitamente o que falta (ex: \"Causa provável: Falha de banco, mas requer verificação de rede pois o log cortou\").\n- **Foco na Causa Raiz**: Nunca reporte apenas o `STATUS` como causa (ex: dizer que a causa é \"CrashLoopBackOff\" é incorreto; a causa é o erro de código ou falta de memória que gerou o crash).\n",
+          "label": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "b5093ea319607d7183eddff03fdf1b88183bd228e7082d5cc9d23f61bec9d384",
+        "promptIdx": 0,
+        "repeatGroupId": "test-1-vars-0",
+        "repeatIndex": 2,
+        "provider": {
+          "id": "openai:gpt-4.1-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: 4  \n- **Pods Com Problema**: 2  \n- **Severidade Geral**: Alta\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: sentinel-api-7d9c8b6f4-zzp10\n- **Status Atual**: ImagePullBackOff (Restarts: 0)  \n- **Evidências Cruzadas**:  \n  - **Evento Chave**: Failed to pull image \"registry.aegis.io/sentinel-api:2.9.2\": manifest unknown  \n- **Causa Raiz Provável**: A imagem \"registry.aegis.io/sentinel-api:2.9.2\" não existe ou não está disponível no registry, causando falha no pull da imagem.  \n- **🛠️ Ação Recomendada para o Plantão**: Verificar se a tag \"2.9.2\" está correta e disponível no registry ou atualizar o deployment para uma tag válida.\n\n---\n\n#### Pod: sentinel-ingest-8f7a9c5b-4dkqm\n- **Status Atual**: Pending (Restarts: 0)  \n- **Evidências Cruzadas**:  \n  - **Evento Chave**: 0/6 nodes are available: 6 Insufficient cpu  \n- **Causa Raiz Provável**: Não há CPU suficiente disponível nos nós do cluster para agendar o pod com request de 2 CPUs.  \n- **🛠️ Ação Recomendada para o Plantão**: Avaliar a capacidade atual do cluster e liberar recursos ou aumentar a capacidade de CPU para permitir o agendamento do pod.",
+          "tokenUsage": {
+            "prompt": 1350,
+            "completion": 375,
+            "cached": 0,
+            "total": 1725,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 1152,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 3622,
+          "finishReason": "stop",
+          "cost": 0.0007944,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:15 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "3404",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Entrada 2 do CP01 (dois pods que não sobem)",
+          "vars": {
+            "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste2.txt"
+          },
+          "assert": [
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            },
+            {
+              "type": "contains",
+              "value": "sentinel-api-7d9c8b6f4-zzp10"
+            },
+            {
+              "type": "contains",
+              "value": "2.9.2"
+            },
+            {
+              "type": "contains",
+              "value": "ImagePullBackOff"
+            },
+            {
+              "type": "contains",
+              "value": "sentinel-ingest-8f7a9c5b-4dkqm"
+            },
+            {
+              "type": "icontains",
+              "value": "cpu"
+            },
+            {
+              "type": "icontains-any",
+              "value": [
+                "Insufficient",
+                "insuficiente",
+                "falta de"
+              ]
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 5,
+        "tokenUsage": {
+          "prompt": 1350,
+          "completion": 375,
+          "cached": 0,
+          "total": 1725,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 1152,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste2.txt"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:15 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "3404",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.0002776,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains",
+                "value": "saudável"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-icontains",
+                "value": "Pods Com Problema"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-icontains",
+                "value": "Causa Raiz"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-icontains",
+                "value": "Relatório de Diagnóstico"
+              }
+            }
+          ]
+        },
+        "id": "c9dada83-4eed-419c-a18e-423680b6faa5",
+        "latencyMs": 984,
+        "namedScores": {},
+        "prompt": {
+          "raw": "# Papel / Persona\nVocê é um Engenheiro SRE / DevOps Sênior especialista em Troubleshooting de workloads no Kubernetes.\n\n# Objetivo\nAnalisar um snapshot de informações do Kubernetes e identificar a causa raiz provável de pods em estado problemático, fornecendo recomendações acionáveis para o engenheiro de plantão.\n\n# Input Esperado\nVocê receberá o conteúdo na tag `<snapshot>` contendo informações de status de pods, eventos e logs.\n\n<snapshot>\n$ kubectl get pods -n sentinel-prod\n        NAME                            READY   STATUS    RESTARTS     AGE\n        sentinel-api-7d9c8b6f4-2xk9p    1/1     Running   0            6d\n        sentinel-api-7d9c8b6f4-h4m2t    1/1     Running   0            6d\n        sentinel-worker-5b8f9c8d-jq7rs  1/1     Running   1 (3d ago)   6d\n        sentinel-scheduler-6c4d7f-nn8vx 1/1     Running   0            6d\n\n        $ kubectl logs sentinel-api-7d9c8b6f4-2xk9p -n sentinel-prod --tail=3\n        2026-05-13 11:02:31 [INFO] [api] health check OK, 0 errors in the last 5min\n        2026-05-13 11:03:31 [INFO] [api] processed 4.2k alerts/min, p99 latency 120ms\n        2026-05-13 11:04:31 [INFO] [api] health check OK\n</snapshot>\n\n# Processo de Raciocínio (Chain-of-Thought)\nAntes de gerar o relatório final, execute o processo de análise internamente passo a passo:\n1. **Triagem Inicial**: Analise a lista de pods no snapshot. Identifique quais pods estão com problemas (ex: CrashLoopBackOff, ImagePullBackOff, Pending, Terminating, OOMKilled, RestartCount > 0).\n2. **Checagem de Saúde Geral**: Se TODOS os pods estiverem com status `Running` ou `Completed`, sem restarts anômalos e sem eventos de erro, classifique o cluster como **Saudável** e encerre a análise profunda.\n3. **Cruzamento de Dados (Status + Eventos + Logs)**: Para cada pod problemático:\n   - Verifique o `STATUS` e `RESTARTS`.\n   - Cruze com os `EVENTOS` relacionados (ex: FailedScheduling, OOMKilled, Liveness probe failed).\n   - Cruze com as linhas de erro nos `LOGS` (ex: Exception, Panic, Connection refused, Timeout).\n4. **Sintese de Causa Raiz**: Correlacione os 3 elementos para determinar a causa real (ex: Não apenas \"CrashLoopBackOff\", mas \"OOMKilled devido a limite de memória insuficiente de 256Mi durante o startup\").\n5. **Definição de Plano de Ação**: Elabore uma recomendação direta para o plantonista atuar imediatamente.\n\n# Formato de Saída\n\n### Caso A: Se houver problemas detectados\nApresente um relatório legível no seguinte formato Markdown:\n\n## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: [Total]\n- **Pods Com Problema**: [Quantidade]\n- **Severidade Geral**: [Crítica / Alta / Média]\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `<nome-do-pod>`\n- **Status Atual**: `<STATUS>` (Restarts: `<N>`)\n- **Evidências Cruzadas**:\n  - **Evento Chave**: `<evento relevante encontrado>`\n  - **Log Relevante**: `<linha de log decisiva>`\n- **Causa Raiz Provável**: `<Explicação técnica direta e contextualizada>`\n- **🛠️ Ação Recomendada para o Plantão**: `<Instrução clara do que rodar ou ajustar>`\n\n---\n\n### Caso B: Se NENHUM problema for detectado (Tudo Saudável)\nApresente estritamente o relatório abaixo:\n\n## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: [Total]\n- **Status**: Todos os pods estão operando normalmente (`Running`/`Completed`), sem eventos de erro ou reinicializações anômalas.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.\n\n# Regras e Restrições\n- **Seja conciso**: Escreva cada campo do relatório em uma única frase curta, porque o plantonista precisa ler durante o incidente.\n- **Omita o que não existe**: Se o snapshot não trouxer log ou evento de um pod, remova o campo correspondente em vez de preenchê-lo com outro dado.\n- **Não faça dumps crus**: Não repita blocos longos de logs ou eventos não formatados.\n- **Não especule sem evidência**: Se os logs forem inconclusivos, declare explicitamente o que falta (ex: \"Causa provável: Falha de banco, mas requer verificação de rede pois o log cortou\").\n- **Foco na Causa Raiz**: Nunca reporte apenas o `STATUS` como causa (ex: dizer que a causa é \"CrashLoopBackOff\" é incorreto; a causa é o erro de código ou falta de memória que gerou o crash).\n",
+          "label": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "b5093ea319607d7183eddff03fdf1b88183bd228e7082d5cc9d23f61bec9d384",
+        "promptIdx": 0,
+        "repeatGroupId": "test-2-vars-0",
+        "repeatIndex": 0,
+        "provider": {
+          "id": "openai:gpt-4.1-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: 4\n- **Status**: Todos os pods estão operando normalmente (`Running`), com reinicializações mínimas e logs sem erros.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.",
+          "tokenUsage": {
+            "prompt": 1210,
+            "completion": 63,
+            "cached": 0,
+            "total": 1273,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 1024,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 984,
+          "finishReason": "stop",
+          "cost": 0.0002776,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:12 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "724",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Entrada 3 do CP01 (tudo saudável)",
+          "vars": {
+            "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste3.txt"
+          },
+          "assert": [
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            },
+            {
+              "type": "icontains",
+              "value": "saudável"
+            },
+            {
+              "type": "not-icontains",
+              "value": "Pods Com Problema"
+            },
+            {
+              "type": "not-icontains",
+              "value": "Causa Raiz"
+            },
+            {
+              "type": "not-icontains",
+              "value": "Relatório de Diagnóstico"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 6,
+        "tokenUsage": {
+          "prompt": 1210,
+          "completion": 63,
+          "cached": 0,
+          "total": 1273,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 1024,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste3.txt"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:12 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "724",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.00029840000000000004,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains",
+                "value": "saudável"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-icontains",
+                "value": "Pods Com Problema"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-icontains",
+                "value": "Causa Raiz"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-icontains",
+                "value": "Relatório de Diagnóstico"
+              }
+            }
+          ]
+        },
+        "id": "5cd7179c-0c01-464d-911a-0d624f9076c6",
+        "latencyMs": 959,
+        "namedScores": {},
+        "prompt": {
+          "raw": "# Papel / Persona\nVocê é um Engenheiro SRE / DevOps Sênior especialista em Troubleshooting de workloads no Kubernetes.\n\n# Objetivo\nAnalisar um snapshot de informações do Kubernetes e identificar a causa raiz provável de pods em estado problemático, fornecendo recomendações acionáveis para o engenheiro de plantão.\n\n# Input Esperado\nVocê receberá o conteúdo na tag `<snapshot>` contendo informações de status de pods, eventos e logs.\n\n<snapshot>\n$ kubectl get pods -n sentinel-prod\n        NAME                            READY   STATUS    RESTARTS     AGE\n        sentinel-api-7d9c8b6f4-2xk9p    1/1     Running   0            6d\n        sentinel-api-7d9c8b6f4-h4m2t    1/1     Running   0            6d\n        sentinel-worker-5b8f9c8d-jq7rs  1/1     Running   1 (3d ago)   6d\n        sentinel-scheduler-6c4d7f-nn8vx 1/1     Running   0            6d\n\n        $ kubectl logs sentinel-api-7d9c8b6f4-2xk9p -n sentinel-prod --tail=3\n        2026-05-13 11:02:31 [INFO] [api] health check OK, 0 errors in the last 5min\n        2026-05-13 11:03:31 [INFO] [api] processed 4.2k alerts/min, p99 latency 120ms\n        2026-05-13 11:04:31 [INFO] [api] health check OK\n</snapshot>\n\n# Processo de Raciocínio (Chain-of-Thought)\nAntes de gerar o relatório final, execute o processo de análise internamente passo a passo:\n1. **Triagem Inicial**: Analise a lista de pods no snapshot. Identifique quais pods estão com problemas (ex: CrashLoopBackOff, ImagePullBackOff, Pending, Terminating, OOMKilled, RestartCount > 0).\n2. **Checagem de Saúde Geral**: Se TODOS os pods estiverem com status `Running` ou `Completed`, sem restarts anômalos e sem eventos de erro, classifique o cluster como **Saudável** e encerre a análise profunda.\n3. **Cruzamento de Dados (Status + Eventos + Logs)**: Para cada pod problemático:\n   - Verifique o `STATUS` e `RESTARTS`.\n   - Cruze com os `EVENTOS` relacionados (ex: FailedScheduling, OOMKilled, Liveness probe failed).\n   - Cruze com as linhas de erro nos `LOGS` (ex: Exception, Panic, Connection refused, Timeout).\n4. **Sintese de Causa Raiz**: Correlacione os 3 elementos para determinar a causa real (ex: Não apenas \"CrashLoopBackOff\", mas \"OOMKilled devido a limite de memória insuficiente de 256Mi durante o startup\").\n5. **Definição de Plano de Ação**: Elabore uma recomendação direta para o plantonista atuar imediatamente.\n\n# Formato de Saída\n\n### Caso A: Se houver problemas detectados\nApresente um relatório legível no seguinte formato Markdown:\n\n## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: [Total]\n- **Pods Com Problema**: [Quantidade]\n- **Severidade Geral**: [Crítica / Alta / Média]\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `<nome-do-pod>`\n- **Status Atual**: `<STATUS>` (Restarts: `<N>`)\n- **Evidências Cruzadas**:\n  - **Evento Chave**: `<evento relevante encontrado>`\n  - **Log Relevante**: `<linha de log decisiva>`\n- **Causa Raiz Provável**: `<Explicação técnica direta e contextualizada>`\n- **🛠️ Ação Recomendada para o Plantão**: `<Instrução clara do que rodar ou ajustar>`\n\n---\n\n### Caso B: Se NENHUM problema for detectado (Tudo Saudável)\nApresente estritamente o relatório abaixo:\n\n## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: [Total]\n- **Status**: Todos os pods estão operando normalmente (`Running`/`Completed`), sem eventos de erro ou reinicializações anômalas.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.\n\n# Regras e Restrições\n- **Seja conciso**: Escreva cada campo do relatório em uma única frase curta, porque o plantonista precisa ler durante o incidente.\n- **Omita o que não existe**: Se o snapshot não trouxer log ou evento de um pod, remova o campo correspondente em vez de preenchê-lo com outro dado.\n- **Não faça dumps crus**: Não repita blocos longos de logs ou eventos não formatados.\n- **Não especule sem evidência**: Se os logs forem inconclusivos, declare explicitamente o que falta (ex: \"Causa provável: Falha de banco, mas requer verificação de rede pois o log cortou\").\n- **Foco na Causa Raiz**: Nunca reporte apenas o `STATUS` como causa (ex: dizer que a causa é \"CrashLoopBackOff\" é incorreto; a causa é o erro de código ou falta de memória que gerou o crash).\n",
+          "label": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "b5093ea319607d7183eddff03fdf1b88183bd228e7082d5cc9d23f61bec9d384",
+        "promptIdx": 0,
+        "repeatGroupId": "test-2-vars-0",
+        "repeatIndex": 1,
+        "provider": {
+          "id": "openai:gpt-4.1-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: 4\n- **Status**: Todos os pods estão operando normalmente (`Running`), com apenas 1 reinício isolado no pod sentinel-worker há 3 dias, sem eventos ou logs indicando erro.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.",
+          "tokenUsage": {
+            "prompt": 1210,
+            "completion": 76,
+            "cached": 0,
+            "total": 1286,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 1024,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 959,
+          "finishReason": "stop",
+          "cost": 0.00029840000000000004,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:13 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "766",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Entrada 3 do CP01 (tudo saudável)",
+          "vars": {
+            "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste3.txt"
+          },
+          "assert": [
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            },
+            {
+              "type": "icontains",
+              "value": "saudável"
+            },
+            {
+              "type": "not-icontains",
+              "value": "Pods Com Problema"
+            },
+            {
+              "type": "not-icontains",
+              "value": "Causa Raiz"
+            },
+            {
+              "type": "not-icontains",
+              "value": "Relatório de Diagnóstico"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 7,
+        "tokenUsage": {
+          "prompt": 1210,
+          "completion": 76,
+          "cached": 0,
+          "total": 1286,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 1024,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste3.txt"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:13 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "766",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0.00029840000000000004,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "latency",
+                "threshold": 5000
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "cost",
+                "threshold": 0.01
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "icontains",
+                "value": "saudável"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-icontains",
+                "value": "Pods Com Problema"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-icontains",
+                "value": "Causa Raiz"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "not-icontains",
+                "value": "Relatório de Diagnóstico"
+              }
+            }
+          ]
+        },
+        "id": "115d1b54-665d-46d9-862f-7c30836acf43",
+        "latencyMs": 1136,
+        "namedScores": {},
+        "prompt": {
+          "raw": "# Papel / Persona\nVocê é um Engenheiro SRE / DevOps Sênior especialista em Troubleshooting de workloads no Kubernetes.\n\n# Objetivo\nAnalisar um snapshot de informações do Kubernetes e identificar a causa raiz provável de pods em estado problemático, fornecendo recomendações acionáveis para o engenheiro de plantão.\n\n# Input Esperado\nVocê receberá o conteúdo na tag `<snapshot>` contendo informações de status de pods, eventos e logs.\n\n<snapshot>\n$ kubectl get pods -n sentinel-prod\n        NAME                            READY   STATUS    RESTARTS     AGE\n        sentinel-api-7d9c8b6f4-2xk9p    1/1     Running   0            6d\n        sentinel-api-7d9c8b6f4-h4m2t    1/1     Running   0            6d\n        sentinel-worker-5b8f9c8d-jq7rs  1/1     Running   1 (3d ago)   6d\n        sentinel-scheduler-6c4d7f-nn8vx 1/1     Running   0            6d\n\n        $ kubectl logs sentinel-api-7d9c8b6f4-2xk9p -n sentinel-prod --tail=3\n        2026-05-13 11:02:31 [INFO] [api] health check OK, 0 errors in the last 5min\n        2026-05-13 11:03:31 [INFO] [api] processed 4.2k alerts/min, p99 latency 120ms\n        2026-05-13 11:04:31 [INFO] [api] health check OK\n</snapshot>\n\n# Processo de Raciocínio (Chain-of-Thought)\nAntes de gerar o relatório final, execute o processo de análise internamente passo a passo:\n1. **Triagem Inicial**: Analise a lista de pods no snapshot. Identifique quais pods estão com problemas (ex: CrashLoopBackOff, ImagePullBackOff, Pending, Terminating, OOMKilled, RestartCount > 0).\n2. **Checagem de Saúde Geral**: Se TODOS os pods estiverem com status `Running` ou `Completed`, sem restarts anômalos e sem eventos de erro, classifique o cluster como **Saudável** e encerre a análise profunda.\n3. **Cruzamento de Dados (Status + Eventos + Logs)**: Para cada pod problemático:\n   - Verifique o `STATUS` e `RESTARTS`.\n   - Cruze com os `EVENTOS` relacionados (ex: FailedScheduling, OOMKilled, Liveness probe failed).\n   - Cruze com as linhas de erro nos `LOGS` (ex: Exception, Panic, Connection refused, Timeout).\n4. **Sintese de Causa Raiz**: Correlacione os 3 elementos para determinar a causa real (ex: Não apenas \"CrashLoopBackOff\", mas \"OOMKilled devido a limite de memória insuficiente de 256Mi durante o startup\").\n5. **Definição de Plano de Ação**: Elabore uma recomendação direta para o plantonista atuar imediatamente.\n\n# Formato de Saída\n\n### Caso A: Se houver problemas detectados\nApresente um relatório legível no seguinte formato Markdown:\n\n## 🚨 Relatório de Diagnóstico de Incidentes - Kubernetes\n\n### 1. Resumo Executivo\n- **Pods Analisados**: [Total]\n- **Pods Com Problema**: [Quantidade]\n- **Severidade Geral**: [Crítica / Alta / Média]\n\n---\n\n### 2. Análise Detalhada por Pod\n\n#### Pod: `<nome-do-pod>`\n- **Status Atual**: `<STATUS>` (Restarts: `<N>`)\n- **Evidências Cruzadas**:\n  - **Evento Chave**: `<evento relevante encontrado>`\n  - **Log Relevante**: `<linha de log decisiva>`\n- **Causa Raiz Provável**: `<Explicação técnica direta e contextualizada>`\n- **🛠️ Ação Recomendada para o Plantão**: `<Instrução clara do que rodar ou ajustar>`\n\n---\n\n### Caso B: Se NENHUM problema for detectado (Tudo Saudável)\nApresente estritamente o relatório abaixo:\n\n## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: [Total]\n- **Status**: Todos os pods estão operando normalmente (`Running`/`Completed`), sem eventos de erro ou reinicializações anômalas.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.\n\n# Regras e Restrições\n- **Seja conciso**: Escreva cada campo do relatório em uma única frase curta, porque o plantonista precisa ler durante o incidente.\n- **Omita o que não existe**: Se o snapshot não trouxer log ou evento de um pod, remova o campo correspondente em vez de preenchê-lo com outro dado.\n- **Não faça dumps crus**: Não repita blocos longos de logs ou eventos não formatados.\n- **Não especule sem evidência**: Se os logs forem inconclusivos, declare explicitamente o que falta (ex: \"Causa provável: Falha de banco, mas requer verificação de rede pois o log cortou\").\n- **Foco na Causa Raiz**: Nunca reporte apenas o `STATUS` como causa (ex: dizer que a causa é \"CrashLoopBackOff\" é incorreto; a causa é o erro de código ou falta de memória que gerou o crash).\n",
+          "label": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "config": {}
+        },
+        "promptId": "b5093ea319607d7183eddff03fdf1b88183bd228e7082d5cc9d23f61bec9d384",
+        "promptIdx": 0,
+        "repeatGroupId": "test-2-vars-0",
+        "repeatIndex": 2,
+        "provider": {
+          "id": "openai:gpt-4.1-mini",
+          "label": ""
+        },
+        "response": {
+          "output": "## ✅ Status da Aplicação: Saudável\n- **Pods Analisados**: 4\n- **Status**: Todos os pods estão operando normalmente (`Running`), com apenas 1 reinício isolado no pod sentinel-worker há 3 dias, sem eventos ou logs indicando erro.\n- **Ação Recomendada**: Nenhuma ação necessária no momento.",
+          "tokenUsage": {
+            "prompt": 1210,
+            "completion": 76,
+            "cached": 0,
+            "total": 1286,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 1024,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "cached": false,
+          "latencyMs": 1136,
+          "finishReason": "stop",
+          "cost": 0.00029840000000000004,
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+                "alt-svc": "h3=\":443\"; ma=86400",
+                "cf-cache-status": "[REDACTED]",
+                "cf-ray": "[REDACTED]",
+                "connection": "keep-alive",
+                "content-type": "application/json",
+                "date": "Fri, 06 Nov 2026 00:05:13 GMT",
+                "openai-organization": "[REDACTED]",
+                "openai-processing-ms": "899",
+                "openai-project": "[REDACTED]",
+                "openai-version": "[REDACTED]",
+                "server": "cloudflare",
+                "set-cookie": "[REDACTED]",
+                "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-openai-proxy-wasm": "[REDACTED]",
+                "x-ratelimit-limit-requests": "[REDACTED]",
+                "x-ratelimit-limit-tokens": "[REDACTED]",
+                "x-ratelimit-remaining-requests": "[REDACTED]",
+                "x-ratelimit-remaining-tokens": "[REDACTED]",
+                "x-ratelimit-reset-requests": "[REDACTED]",
+                "x-ratelimit-reset-tokens": "[REDACTED]",
+                "x-request-id": "[REDACTED]"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Entrada 3 do CP01 (tudo saudável)",
+          "vars": {
+            "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste3.txt"
+          },
+          "assert": [
+            {
+              "type": "latency",
+              "threshold": 5000
+            },
+            {
+              "type": "cost",
+              "threshold": 0.01
+            },
+            {
+              "type": "icontains",
+              "value": "saudável"
+            },
+            {
+              "type": "not-icontains",
+              "value": "Pods Com Problema"
+            },
+            {
+              "type": "not-icontains",
+              "value": "Causa Raiz"
+            },
+            {
+              "type": "not-icontains",
+              "value": "Relatório de Diagnóstico"
+            }
+          ],
+          "options": {},
+          "metadata": {}
+        },
+        "testIdx": 8,
+        "tokenUsage": {
+          "prompt": 1210,
+          "completion": 76,
+          "cached": 0,
+          "total": 1286,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 1024,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste3.txt"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-expose-headers": "X-Request-ID,CF-Ray,CF-Ray",
+              "alt-svc": "h3=\":443\"; ma=86400",
+              "cf-cache-status": "[REDACTED]",
+              "cf-ray": "[REDACTED]",
+              "connection": "keep-alive",
+              "content-type": "application/json",
+              "date": "Fri, 06 Nov 2026 00:05:13 GMT",
+              "openai-organization": "[REDACTED]",
+              "openai-processing-ms": "899",
+              "openai-project": "[REDACTED]",
+              "openai-version": "[REDACTED]",
+              "server": "cloudflare",
+              "set-cookie": "[REDACTED]",
+              "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-openai-proxy-wasm": "[REDACTED]",
+              "x-ratelimit-limit-requests": "[REDACTED]",
+              "x-ratelimit-limit-tokens": "[REDACTED]",
+              "x-ratelimit-remaining-requests": "[REDACTED]",
+              "x-ratelimit-remaining-tokens": "[REDACTED]",
+              "x-ratelimit-reset-requests": "[REDACTED]",
+              "x-ratelimit-reset-tokens": "[REDACTED]",
+              "x-request-id": "[REDACTED]"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      }
+    ],
+    "stats": {
+      "successes": 9,
+      "failures": 0,
+      "errors": 0,
+      "tokenUsage": {
+        "prompt": 11835,
+        "completion": 2109,
+        "cached": 0,
+        "total": 13944,
+        "numRequests": 9,
+        "completionDetails": {
+          "reasoning": 0,
+          "acceptedPrediction": 0,
+          "rejectedPrediction": 0,
+          "cacheReadInputTokens": 9984,
+          "cacheCreationInputTokens": 0
+        },
+        "assertions": {
+          "total": 0,
+          "prompt": 0,
+          "completion": 0,
+          "cached": 0,
+          "numRequests": 0,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          }
+        }
+      },
+      "durationMs": 6537,
+      "evaluationDurationMs": 6537
+    },
+    "repeatStability": {
+      "totalGroups": 3,
+      "unstableGroups": 0,
+      "groupsWithErrors": 0,
+      "cachedResults": 0,
+      "groups": [
+        {
+          "repeatGroupId": "test-0-vars-0",
+          "promptIdx": 0,
+          "provider": {
+            "id": "openai:gpt-4.1-mini",
+            "label": ""
+          },
+          "description": "Entrada 1 do CP01 (pod reiniciando por falta de memória)",
+          "promptLabel": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "repetitions": 3,
+          "passed": 3,
+          "failed": 0,
+          "errors": 0,
+          "cached": 0,
+          "unstable": false,
+          "passRate": 1,
+          "passRateConfidenceInterval": {
+            "confidenceLevel": 0.95,
+            "lower": 0.43850296824495455,
+            "upper": 1
+          }
+        },
+        {
+          "repeatGroupId": "test-1-vars-0",
+          "promptIdx": 0,
+          "provider": {
+            "id": "openai:gpt-4.1-mini",
+            "label": ""
+          },
+          "description": "Entrada 2 do CP01 (dois pods que não sobem)",
+          "promptLabel": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "repetitions": 3,
+          "passed": 3,
+          "failed": 0,
+          "errors": 0,
+          "cached": 0,
+          "unstable": false,
+          "passRate": 1,
+          "passRateConfidenceInterval": {
+            "confidenceLevel": 0.95,
+            "lower": 0.43850296824495455,
+            "upper": 1
+          }
+        },
+        {
+          "repeatGroupId": "test-2-vars-0",
+          "promptIdx": 0,
+          "provider": {
+            "id": "openai:gpt-4.1-mini",
+            "label": ""
+          },
+          "description": "Entrada 3 do CP01 (tudo saudável)",
+          "promptLabel": "devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs",
+          "repetitions": 3,
+          "passed": 3,
+          "failed": 0,
+          "errors": 0,
+          "cached": 0,
+          "unstable": false,
+          "passRate": 1,
+          "passRateConfidenceInterval": {
+            "confidenceLevel": 0.95,
+            "lower": 0.43850296824495455,
+            "upper": 1
+          }
+        }
+      ]
+    }
+  },
+  "config": {
+    "tags": {},
+    "prompts": [
+      "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/prompt-sem-frontmatter.cjs"
+    ],
+    "providers": [
+      "openai:gpt-4.1-mini"
+    ],
+    "tests": [
+      {
+        "description": "Entrada 1 do CP01 (pod reiniciando por falta de memória)",
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste1.txt"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "sentinel-api-7d9c8b6f4-h4m2t"
+          },
+          {
+            "type": "icontains-any",
+            "value": [
+              "OOMKilled",
+              "memória"
+            ]
+          }
+        ]
+      },
+      {
+        "description": "Entrada 2 do CP01 (dois pods que não sobem)",
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste2.txt"
+        },
+        "assert": [
+          {
+            "type": "contains",
+            "value": "sentinel-api-7d9c8b6f4-zzp10"
+          },
+          {
+            "type": "contains",
+            "value": "2.9.2"
+          },
+          {
+            "type": "contains",
+            "value": "ImagePullBackOff"
+          },
+          {
+            "type": "contains",
+            "value": "sentinel-ingest-8f7a9c5b-4dkqm"
+          },
+          {
+            "type": "icontains",
+            "value": "cpu"
+          },
+          {
+            "type": "icontains-any",
+            "value": [
+              "Insufficient",
+              "insuficiente",
+              "falta de"
+            ]
+          }
+        ]
+      },
+      {
+        "description": "Entrada 3 do CP01 (tudo saudável)",
+        "vars": {
+          "snapshot": "file:///home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes/incidente/snapshot_teste3.txt"
+        },
+        "assert": [
+          {
+            "type": "icontains",
+            "value": "saudável"
+          },
+          {
+            "type": "not-icontains",
+            "value": "Pods Com Problema"
+          },
+          {
+            "type": "not-icontains",
+            "value": "Causa Raiz"
+          },
+          {
+            "type": "not-icontains",
+            "value": "Relatório de Diagnóstico"
+          }
+        ]
+      }
+    ],
+    "env": {},
+    "outputPath": [
+      "Evidências/Checkpoint-08/diagnosticar-pods-kubernetes-v2.json"
+    ],
+    "extensions": [],
+    "metadata": {},
+    "evaluateOptions": {
+      "repeat": 3,
+      "cache": false
+    },
+    "defaultTest": {
+      "assert": [
+        {
+          "type": "latency",
+          "threshold": 5000
+        },
+        {
+          "type": "cost",
+          "threshold": 0.01
+        }
+      ],
+      "vars": {},
+      "options": {},
+      "metadata": {}
+    },
+    "basePath": "/home/alexandre/Documentos/github/prompt-registry/devops/diagnosticar-pods-kubernetes"
+  },
+  "shareableUrl": null,
+  "metadata": {
+    "promptfooVersion": "0.125.1",
+    "nodeVersion": "v25.9.0",
+    "platform": "linux",
+    "arch": "x64",
+    "exportedAt": "2026-11-06T00:05:15.612Z",
+    "evaluationCreatedAt": "2026-11-06T00:05:08.801Z"
+  },
+  "vars": [
+    "snapshot"
+  ],
+  "runtimeOptions": {
+    "eventSource": "cli",
+    "repeat": 3,
+    "cache": false,
+    "showProgressBar": false,
+    "maxConcurrency": 4
+  }
+}
